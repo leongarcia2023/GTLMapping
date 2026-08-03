@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "GTLMapping"
+version = "0.4.0"
+description = "Mid-infrared extinction mapping with a spatially varying foreground"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+authors = [
+  { name = "León Garcia" },
+]
+keywords = [
+  "astronomy",
+  "extinction mapping",
+  "infrared dark clouds",
+  "JWST",
+  "MIREX",
+  "Spitzer",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Scientific/Engineering :: Astronomy",
+]
+dependencies = [
+  "astropy>=5.3",
+  "numpy>=1.24",
+  "pykrige>=1.7",
+  "scipy>=1.10",
+]
+
+[project.optional-dependencies]
+align = [
+  "reproject>=0.12",
+]
+docs = [
+  "sphinx>=7",
+  "sphinx-rtd-theme>=2",
+]
+plot = [
+  "matplotlib>=3.7",
+]
+test = [
+  "pytest>=8",
+]
+release = [
+  "build>=1",
+  "check-wheel-contents>=0.6",
+  "twine>=6",
+]
+dev = [
+  "build>=1",
+  "check-wheel-contents>=0.6",
+  "pytest>=8",
+  "reproject>=0.12",
+  "sphinx>=7",
+  "sphinx-rtd-theme>=2",
+  "twine>=6",
+]
+
+[project.scripts]
+gtlmapping = "gtlmapping.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/leongarcia2023/GTLMapping"
+Repository = "https://github.com/leongarcia2023/GTLMapping"
+Issues = "https://github.com/leongarcia2023/GTLMapping/issues"
+Changelog = "https://github.com/leongarcia2023/GTLMapping/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]

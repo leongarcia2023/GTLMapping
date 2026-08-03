@@ -1,0 +1,191 @@
+{
+  "input": "F480M_registered.fits",
+  "x_range": [
+    77,
+    200
+  ],
+  "y_range": [
+    1980,
+    2103
+  ],
+  "distance_kpc": 8.15,
+  "noise_sigma_mjy_sr": 0.10232368856668472,
+  "background_level_mjy_sr": 7.266651058197022,
+  "background_boxes_row_start_row_stop_col_start_col_stop": [
+    [
+      1857,
+      1980,
+      77,
+      200
+    ],
+    [
+      1857,
+      1980,
+      200,
+      323
+    ],
+    [
+      1980,
+      2103,
+      200,
+      323
+    ],
+    [
+      2103,
+      2226,
+      200,
+      323
+    ],
+    [
+      2103,
+      2226,
+      77,
+      200
+    ]
+  ],
+  "background_box_medians_mjy_sr": [
+    6.857752799987793,
+    7.8227338790893555,
+    7.285389423370361,
+    8.684247970581055,
+    5.683131217956543
+  ],
+  "background_box_scatter_mjy_sr": 1.1173510086386753,
+  "background_box_standard_error_mjy_sr": 0.4996945620088065,
+  "bt12_foreground_mjy_sr": 2.30533553220967,
+  "gtl_foreground_min_median_max_mjy_sr": [
+    2.3302264421636565,
+    2.370560694765454,
+    2.4108949473672507
+  ],
+  "bt12_saturated_pixels": 129,
+  "bt12_local_saturated_pixels": 55,
+  "bt12_independent_saturated_pixels": 49,
+  "gtl_local_saturated_pixels": 117,
+  "gtl_strict_lower_limit_pixels": 0,
+  "gtl_raw_sample_count": 56,
+  "gtl_unique_sample_count": 49,
+  "conservative_blend_factor": 0.03,
+  "conservative_unregularized_local_saturation_pixels": 4889,
+  "conservative_unregularized_strict_saturation_pixels": 3984,
+  "bt12_mass_msun": 30.34526570213641,
+  "gtl_detected_only_mass_msun": 31.240713224052712,
+  "gtl_lower_limit_mass_msun": 31.240713224052712,
+  "gtl_to_bt12_detected_mass_ratio": 1.0295086400200233,
+  "gtl_to_bt12_lower_limit_mass_ratio": 1.0295086400200233,
+  "grid_sensitivity": [
+    {
+      "grid_n": 4,
+      "raw_sample_count": 24,
+      "unique_sample_count": 20,
+      "local_saturated_pixels": 123,
+      "strict_lower_limit_pixels": 0,
+      "mass_msun": 31.331603603366773,
+      "gtl_to_bt12_mass_ratio": 1.0325038479119635
+    },
+    {
+      "grid_n": 5,
+      "raw_sample_count": 34,
+      "unique_sample_count": 26,
+      "local_saturated_pixels": 131,
+      "strict_lower_limit_pixels": 0,
+      "mass_msun": 31.44962330818858,
+      "gtl_to_bt12_mass_ratio": 1.036393077486694
+    },
+    {
+      "grid_n": 6,
+      "raw_sample_count": 45,
+      "unique_sample_count": 34,
+      "local_saturated_pixels": 130,
+      "strict_lower_limit_pixels": 0,
+      "mass_msun": 31.374029723148258,
+      "gtl_to_bt12_mass_ratio": 1.0339019612189264
+    },
+    {
+      "grid_n": 7,
+      "raw_sample_count": 51,
+      "unique_sample_count": 41,
+      "local_saturated_pixels": 113,
+      "strict_lower_limit_pixels": 0,
+      "mass_msun": 31.1609567175119,
+      "gtl_to_bt12_mass_ratio": 1.026880338547112
+    },
+    {
+      "grid_n": 8,
+      "raw_sample_count": 56,
+      "unique_sample_count": 49,
+      "local_saturated_pixels": 117,
+      "strict_lower_limit_pixels": 0,
+      "mass_msun": 31.240713224052712,
+      "gtl_to_bt12_mass_ratio": 1.0295086400200233
+    },
+    {
+      "grid_n": 9,
+      "raw_sample_count": 44,
+      "unique_sample_count": 40,
+      "local_saturated_pixels": 136,
+      "strict_lower_limit_pixels": 0,
+      "mass_msun": 31.488971400073932,
+      "gtl_to_bt12_mass_ratio": 1.0376897572479322
+    },
+    {
+      "grid_n": 10,
+      "raw_sample_count": 22,
+      "unique_sample_count": 22,
+      "local_saturated_pixels": 113,
+      "strict_lower_limit_pixels": 0,
+      "mass_msun": 31.170468659634995,
+      "gtl_to_bt12_mass_ratio": 1.027193795750501
+    }
+  ],
+  "opacity_systematic_fraction": 0.3,
+  "bt12_opacity_systematic_msun": 9.103579710640922,
+  "gtl_opacity_systematic_msun": 9.372213967215814,
+  "source_mask_dilation_sensitivity": {
+    "0": {
+      "masked_pixel_count": 2507,
+      "kept_pixel_fraction": 0.8342917575517219,
+      "bt12_mass_msun": 30.34526570213641,
+      "gtl_mass_msun": 31.240713224052712,
+      "gtl_to_bt12_mass_ratio": 1.0295086400200233
+    },
+    "3": {
+      "masked_pixel_count": 6350,
+      "kept_pixel_fraction": 0.5802762905677837,
+      "bt12_mass_msun": 26.63229563341911,
+      "gtl_mass_msun": 27.45635671640114,
+      "gtl_to_bt12_mass_ratio": 1.030942172403192
+    },
+    "6": {
+      "masked_pixel_count": 9526,
+      "kept_pixel_fraction": 0.37034833762971775,
+      "bt12_mass_msun": 20.288871557352973,
+      "gtl_mass_msun": 20.963269935566533,
+      "gtl_to_bt12_mass_ratio": 1.0332398170251686
+    }
+  },
+  "background_sensitivity": [
+    {
+      "background_level_mjy_sr": 6.149300049558347,
+      "bt12_mass_msun": 21.335490384294243,
+      "gtl_mass_msun": 22.09828159499293,
+      "gtl_to_bt12_mass_ratio": 1.0357522230311709,
+      "gtl_invalid_background_pixels": 0
+    },
+    {
+      "background_level_mjy_sr": 7.266651058197022,
+      "bt12_mass_msun": 30.34526570213641,
+      "gtl_mass_msun": 31.240713224052712,
+      "gtl_to_bt12_mass_ratio": 1.0295086400200233,
+      "gtl_invalid_background_pixels": 0
+    },
+    {
+      "background_level_mjy_sr": 8.384002066835697,
+      "bt12_mass_msun": 38.44198032862418,
+      "gtl_mass_msun": 39.43374330358719,
+      "gtl_to_bt12_mass_ratio": 1.0257989564139216,
+      "gtl_invalid_background_pixels": 0
+    }
+  ],
+  "background_box_note": "Five touching comparison boxes; replace with Ruben's exact machine-readable background regions when available."
+}
