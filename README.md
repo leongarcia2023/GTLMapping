@@ -1,6 +1,7 @@
 # GTLMapping
 
 [![CI](https://github.com/leongarcia2023/GTLMapping/actions/workflows/ci.yml/badge.svg)](https://github.com/leongarcia2023/GTLMapping/actions/workflows/ci.yml)
+[![Documentation Status](https://readthedocs.org/projects/gtlmapping/badge/?version=latest)](https://gtlmapping.readthedocs.io/en/latest/?badge=latest)
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](https://github.com/leongarcia2023/GTLMapping/blob/main/LICENSE)
 
 `GTLMapping` is an astronomy package for mid-infrared extinction

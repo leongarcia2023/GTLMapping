@@ -22,7 +22,9 @@ import and ``gtlmapping --help`` before uploading it.
 Read the Docs
 -------------
 
-The repository includes ``.readthedocs.yaml``. After pushing to GitHub:
+The repository includes ``.readthedocs.yaml`` and the documentation is
+published at https://gtlmapping.readthedocs.io/en/latest/. After pushing
+to GitHub:
 
 1. import the repository into Read the Docs;
 2. build the default branch;

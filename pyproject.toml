@@ -77,6 +77,7 @@ gtlmapping = "gtlmapping.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/leongarcia2023/GTLMapping"
+Documentation = "https://gtlmapping.readthedocs.io/en/latest/"
 Repository = "https://github.com/leongarcia2023/GTLMapping"
 Issues = "https://github.com/leongarcia2023/GTLMapping/issues"
 Changelog = "https://github.com/leongarcia2023/GTLMapping/blob/main/CHANGELOG.md"

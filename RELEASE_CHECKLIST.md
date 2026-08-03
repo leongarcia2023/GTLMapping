@@ -24,8 +24,8 @@ decisions still require the project owner's approval:
       exact Rubén mass reproduction.
 - [ ] Add a software DOI/citation after creating a Zenodo release.
 - [x] Configure test, documentation, build, metadata, and wheel-smoke checks in CI.
-- [ ] Confirm the first GitHub CI run passes.
+- [x] Confirm the first GitHub CI run passes.
 - [x] Build and inspect both wheel and source distribution locally.
 - [x] Run `twine check` and `check-wheel-contents` on clean distributions.
 - [ ] Publish to TestPyPI before PyPI.
-- [ ] Connect the GitHub repository to Read the Docs.
+- [x] Connect the GitHub repository to Read the Docs.
