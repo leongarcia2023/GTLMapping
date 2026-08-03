@@ -1,0 +1,11 @@
+include CHANGELOG.md
+include CITATION.cff
+include LICENSE
+include README.md
+include RELEASE_CHECKLIST.md
+include VALIDATION_REPORT.md
+include .readthedocs.yaml
+recursive-include docs *.py *.rst
+recursive-include docs/_static *.png
+recursive-include examples *.py
+recursive-include tests *.py
