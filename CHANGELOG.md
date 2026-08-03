@@ -5,6 +5,7 @@
 - Add BSD 3-Clause licensing and standards-compliant SPDX package metadata.
 - Add canonical GitHub project links, artifact validation, and clean-wheel
   smoke testing to the release workflow.
+- Keep the packaging-consistency tests compatible with supported Python 3.10.
 
 ## 0.4.0
 

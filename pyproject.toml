@@ -54,6 +54,7 @@ plot = [
 ]
 test = [
   "pytest>=8",
+  "tomli>=2; python_version < '3.11'",
 ]
 release = [
   "build>=1",
@@ -67,6 +68,7 @@ dev = [
   "reproject>=0.12",
   "sphinx>=7",
   "sphinx-rtd-theme>=2",
+  "tomli>=2; python_version < '3.11'",
   "twine>=6",
 ]
 
