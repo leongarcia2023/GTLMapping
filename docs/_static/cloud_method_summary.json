@@ -1,0 +1,146 @@
+[
+  {
+    "cloud": "C",
+    "catalog_name": "G028.37+00.07",
+    "image": "1kx1k.fits",
+    "background": "SMFbg1.fits",
+    "noise_sigma_mjy_sr": 0.6,
+    "accepted_windows": 48,
+    "accepted_unique_sites": 29,
+    "profiles": {
+      "bt12": {
+        "surface_density_sum": 44941.40861196096,
+        "local_saturation_pixels": 22,
+        "strict_lower_limit_pixels": 0,
+        "foreground_min": 29.33607847105782,
+        "foreground_median": 29.33607847105782,
+        "foreground_max": 29.33607847105782,
+        "ratio_to_bt12": 1.0
+      },
+      "conservative": {
+        "surface_density_sum": 46696.819920182126,
+        "local_saturation_pixels": 68,
+        "strict_lower_limit_pixels": 0,
+        "foreground_min": 29.33607847105782,
+        "foreground_median": 30.71973691894214,
+        "foreground_max": 33.916306675261815,
+        "ratio_to_bt12": 1.039059997504261
+      },
+      "moderate": {
+        "surface_density_sum": 49101.81308735378,
+        "local_saturation_pixels": 183,
+        "strict_lower_limit_pixels": 77,
+        "foreground_min": 27.22743288222111,
+        "foreground_median": 37.40223627300918,
+        "foreground_max": 45.61342683974063,
+        "ratio_to_bt12": 1.092573966946945
+      },
+      "liberal": {
+        "surface_density_sum": 49316.51398872383,
+        "local_saturation_pixels": 1104,
+        "strict_lower_limit_pixels": 762,
+        "foreground_min": 20.081436636429835,
+        "foreground_median": 40.43104341800598,
+        "foreground_max": 56.85342455146889,
+        "ratio_to_bt12": 1.097351318347384
+      }
+    },
+    "figure": "cloud_c_method.png"
+  },
+  {
+    "cloud": "F",
+    "catalog_name": "G034.43+00.24",
+    "image": "CloudF.fits",
+    "background": "GTLMapping SMF estimate",
+    "noise_sigma_mjy_sr": 0.6,
+    "accepted_windows": 73,
+    "accepted_unique_sites": 53,
+    "profiles": {
+      "bt12": {
+        "surface_density_sum": 6312.016940678489,
+        "local_saturation_pixels": 15,
+        "strict_lower_limit_pixels": 0,
+        "foreground_min": 26.796986654069688,
+        "foreground_median": 26.796986654069688,
+        "foreground_max": 26.796986654069688,
+        "ratio_to_bt12": 1.0
+      },
+      "conservative": {
+        "surface_density_sum": 6399.266645369867,
+        "local_saturation_pixels": 20,
+        "strict_lower_limit_pixels": 0,
+        "foreground_min": 26.93051286495298,
+        "foreground_median": 26.943006758145856,
+        "foreground_max": 26.95550065133873,
+        "ratio_to_bt12": 1.0138227931755202
+      },
+      "moderate": {
+        "surface_density_sum": 6936.0578307542455,
+        "local_saturation_pixels": 268,
+        "strict_lower_limit_pixels": 9,
+        "foreground_min": 27.04026669183528,
+        "foreground_median": 27.724719380858524,
+        "foreground_max": 28.497842069230085,
+        "ratio_to_bt12": 1.0988655283945858
+      },
+      "liberal": {
+        "surface_density_sum": 7360.722415069002,
+        "local_saturation_pixels": 833,
+        "strict_lower_limit_pixels": 81,
+        "foreground_min": 26.833206652893118,
+        "foreground_median": 28.202112030939603,
+        "foreground_max": 29.748357407682725,
+        "ratio_to_bt12": 1.1661442743653008
+      }
+    },
+    "figure": "cloud_f_method.png"
+  },
+  {
+    "cloud": "H",
+    "catalog_name": "G035.39-00.33",
+    "image": "IRDCCloudH.fits",
+    "background": "GTLMapping SMF estimate",
+    "noise_sigma_mjy_sr": 0.6,
+    "accepted_windows": 58,
+    "accepted_unique_sites": 36,
+    "profiles": {
+      "bt12": {
+        "surface_density_sum": 7218.30601375096,
+        "local_saturation_pixels": 25,
+        "strict_lower_limit_pixels": 0,
+        "foreground_min": 21.293860172775556,
+        "foreground_median": 21.293860172775556,
+        "foreground_max": 21.293860172775556,
+        "ratio_to_bt12": 1.0
+      },
+      "conservative": {
+        "surface_density_sum": 7381.604616749504,
+        "local_saturation_pixels": 54,
+        "strict_lower_limit_pixels": 0,
+        "foreground_min": 21.64104543453052,
+        "foreground_median": 21.7287049901321,
+        "foreground_max": 21.816361675303245,
+        "ratio_to_bt12": 1.02262284290628
+      },
+      "moderate": {
+        "surface_density_sum": 7823.488321151378,
+        "local_saturation_pixels": 112,
+        "strict_lower_limit_pixels": 26,
+        "foreground_min": 21.39177408116467,
+        "foreground_median": 22.872223828278944,
+        "foreground_max": 25.13933224083701,
+        "ratio_to_bt12": 1.0838399350550583
+      },
+      "liberal": {
+        "surface_density_sum": 9063.480126206823,
+        "local_saturation_pixels": 616,
+        "strict_lower_limit_pixels": 259,
+        "foreground_min": 22.40310347500576,
+        "foreground_median": 25.36400296923431,
+        "foreground_max": 29.898219794350446,
+        "ratio_to_bt12": 1.2556242571235943
+      }
+    },
+    "figure": "cloud_h_method.png"
+  }
+]
