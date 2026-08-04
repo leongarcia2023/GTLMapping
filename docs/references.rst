@@ -75,14 +75,13 @@ surface-density distributions.
 JWST-era applications
 ----------------------
 
-Fedriani, R., Tan, J. C., Law, C.-Y., Crowe, S., et al. (2025), *The
-JWST-NIRCam View of Sagittarius C. IV. Mid-Infrared Extinction
-(MIREX) Mapping*. This study reuses the BT12 saturation prescription
-with an error-map-derived noise level, local adjacent background
-boxes, and a filter-specific 4.8-micron opacity. The local draft and
-correspondence supply the filter-convolved table implemented here; its
-9.76 and 15.23 cm\ :sup:`2` g\ :sup:`-1` F480M values correspond to
-gas/dust ratios 156 and 100, respectively.
+Fedriani, R., Tan, J. C., Law, C.-Y., Crowe, S., et al. (in preparation),
+*The JWST-NIRCam View of Sagittarius C. IV. Mid-Infrared Extinction
+(MIREX) Mapping*. The study applies the BT12 saturation prescription to
+JWST F480M data with an ERR-derived noise level and adjacent background
+regions. GTLMapping uses its filter-convolved opacity table. The F480M values
+9.76 and 15.23 cm\ :sup:`2` g\ :sup:`-1` correspond to gas-to-dust ratios 156
+and 100.
 
 André, P., Mattern, M., Arzoumanian, D., Shimajiri, Y., et al. (2025),
 *Structure and Fragmentation Scale of a Massive Star-Forming Filament

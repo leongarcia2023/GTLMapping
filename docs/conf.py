@@ -5,7 +5,12 @@ from importlib.metadata import version as package_version
 
 project = "GTLMapping"
 author = "León Garcia"
-copyright = f"2026-{datetime.now(UTC).year}, {author}"
+current_year = datetime.now(UTC).year
+copyright = (
+    f"2026, {author}"
+    if current_year == 2026
+    else f"2026-{current_year}, {author}"
+)
 release = package_version("GTLMapping")
 version = release
 

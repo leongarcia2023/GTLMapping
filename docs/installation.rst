@@ -1,11 +1,11 @@
 Installation
 ============
 
-Current repository
-------------------
+Install from GitHub
+-------------------
 
-Clone or download the repository, enter its top-level directory, and
-install it with:
+GTLMapping has not reached PyPI yet. Install the current release from its
+GitHub repository:
 
 .. code-block:: console
 
@@ -13,40 +13,43 @@ install it with:
    cd GTLMapping
    python -m pip install .
 
-For tests and documentation:
+Use an editable install for development, tests, and documentation:
 
 .. code-block:: console
 
    python -m pip install -e ".[dev]"
 
-Science data are intentionally not bundled in the Python distribution.
-Provide the FITS image and ``catalog.dat`` (or another catalog path)
-separately when running GTLMapping.
+GTLMapping requires Python 3.10 or later. NumPy, SciPy, Astropy, and PyKrige
+are installed as dependencies.
 
-Optional alignment support
---------------------------
+Bring your own data
+-------------------
 
-Strict WCS checking is part of the base package. Automatic reprojection
-is optional:
+The Python distribution does not contain science images or ``catalog.dat``.
+Pass their paths to GTLMapping when you run an analysis. Keeping the images
+outside the package avoids a large download and prevents local paths from
+entering a release.
+
+Optional reprojection
+---------------------
+
+The base package checks whether the observed image and background share a
+celestial grid. Install the ``align`` extra if you want GTLMapping to reproject
+a mismatched background:
 
 .. code-block:: console
 
    python -m pip install "GTLMapping[align]"
 
-Future PyPI release
--------------------
+Pass ``align=True`` only when the reprojection is part of your analysis.
 
-After the package has been published, the intended command is:
+PyPI release
+------------
+
+After the first PyPI release, installation will use:
 
 .. code-block:: console
 
    python -m pip install GTLMapping
 
-Do not advertise the PyPI command as active until the first release is
-actually published.
-
-Requirements
-------------
-
-The package requires Python 3.10 or later, NumPy, SciPy, Astropy, and
-PyKrige.
+Until then, use the GitHub command above.

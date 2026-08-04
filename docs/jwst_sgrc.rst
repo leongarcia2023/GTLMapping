@@ -1,198 +1,164 @@
-JWST Sgr C audit
-=================
+Sgr C F480M case study
+======================
 
-Local data provenance
----------------------
+Dataset and region
+------------------
 
-The two local files named ``F480M_registered.fits`` and
-``F480M_registered (1).fits`` are byte-identical. They contain:
+The validation file contains a 5660 by 2300 pixel ``SCI`` image and a
+matching ``ERR`` image. Both extensions use MJy sr\ :sup:`-1`. The eastern
+filament test region uses rows 1980:2103 and columns 77:200 with NumPy's
+stop-exclusive slicing. The resulting cutout is 123 by 123 pixels at 0.06293
+arcsec per pixel.
 
-* an empty primary HDU;
-* a 5660 by 2300-pixel ``SCI`` image in MJy sr\ :sup:`-1`; and
-* a matching ``ERR`` standard-deviation image in MJy sr\ :sup:`-1`.
+The final manuscript background regions were available only as a figure.
+GTLMapping therefore uses five adjacent, target-sized boxes for this case
+study. The calculation records their pixel coordinates so another analyst can
+replace them with the publication regions.
 
-The Rubén Fedriani correspondence identifies the eastern filament
-cutout as rows 1980:2103 and columns 77:200, using stop-exclusive NumPy
-slices. The cutout is 123 by 123 pixels at 0.06293 arcsec per pixel.
+BT12 reference
+--------------
 
-BT12 reproduction
+The cutout gives:
+
+* a median ERR of 0.1023237 MJy sr\ :sup:`-1`;
+* a minimum intensity of 2.3683054 MJy sr\ :sup:`-1`;
+* 129 pixels between the minimum and :math:`I_\mathrm{min}+2\sigma`;
+* 49 qualifying pixels at least 0.74 arcsec from the minimum; and
+* a BT12 mean-minus-:math:`2\sigma` foreground of 2.3053355 MJy
+  sr\ :sup:`-1`.
+
+These values reproduce the error-based BT12 foreground calculation. The
+mass comparison below uses the same background, opacity, distance, and
+bright-pixel policy for BT12 and GTL.
+
+Shared background
 -----------------
 
-Within that cutout:
+The five comparison boxes touch the north, northeast, east, southeast, and
+south sides of the target. Pixels above 15 MJy sr\ :sup:`-1` are excluded.
+The box medians are 6.858, 7.823, 7.285, 8.684, and 5.683 MJy
+sr\ :sup:`-1`; their mean is 7.267 MJy sr\ :sup:`-1`.
 
-* the median ERR value is 0.1023237 MJy sr\ :sup:`-1`;
-* the intensity minimum is 2.3683054 MJy sr\ :sup:`-1`;
-* 129 pixels fall strictly between the minimum and
-  :math:`I_\mathrm{min}+2\sigma`;
-* 49 of those pixels are at least 0.74 arcsec from the minimum; and
-* the BT12 mean-minus-:math:`2\sigma` foreground is
-  2.3053355 MJy sr\ :sup:`-1`.
-
-These values reproduce the supplied manuscript's error-based BT12
-procedure and validate the SCI/ERR/WCS interface. The final mass still
-depends on the exact adjacent background boxes and aperture. Those
-regions were shown graphically in the manuscript but were not present
-as machine-readable region files in the supplied material, so a
-bit-for-bit Rubén mass reproduction is not claimed.
-
-Controlled BT12/GTL comparison
-------------------------------
-
-With an 8-by-8 overlapping GTL scan, 0.74-arcsec independent separation,
-and edge completion, this cutout yields 56 accepted windows and 49
-unique sample coordinates. Those minima range from 2.399 to
-6.064 MJy sr\ :sup:`-1`; their wide range is the key warning that they
-cannot all be treated as direct foreground measurements.
-
-For a reproducible pressure test, five target-sized boxes touching the
-north, northeast, east, southeast, and south sides of the target were
-used. Pixels above 15 MJy sr\ :sup:`-1` were excluded. The box medians
-are 6.858, 7.823, 7.285, 8.684, and 5.683 MJy sr\ :sup:`-1`, giving a
-shared background of 7.267 MJy sr\ :sup:`-1`. These are explicit
-comparison boxes, not a claim to recover Rubén's unpublished box
+The spread among the boxes is part of the background uncertainty. These boxes
+make the package test reproducible, but they do not recover unpublished region
 coordinates.
 
-Using the same image, background, opacity
-(:math:`\kappa_{\mathrm{F480M}}=9.76` cm\ :sup:`2` g\ :sup:`-1`),
-gas/dust ratio 156, 8.15-kpc distance, pixel area, and bright-pixel
-policy gives:
+BT12 and conservative GTL
+-------------------------
+
+An 8 by 8 overlapping GTL scan with edge completion finds 56 accepted windows
+and 49 unique coordinates. The accepted minima range from 2.399 to 6.064 MJy
+sr\ :sup:`-1`. That range shows why the mapper cannot treat every local
+minimum as a direct foreground measurement.
+
+The conservative fit uses a robust plane, keeps BT12 as a pointwise floor,
+and reduces its spatial amplitude until the saturation limits are met. At
+:math:`\kappa_\mathrm{F480M}=9.76` cm\ :sup:`2` g\ :sup:`-1`, gas-to-dust
+ratio 156, and a distance of 8.15 kpc, the results are:
 
 .. list-table::
    :header-rows: 1
 
-   * - Result in the 123-by-123 box
+   * - Quantity in the 123 by 123 pixel region
      - BT12
-     - GTL
-   * - Foreground, min/median/max (MJy sr\ :sup:`-1`)
+     - Conservative GTL
+   * - Foreground min / median / max (MJy sr\ :sup:`-1`)
      - 2.305 / 2.305 / 2.305
      - 2.330 / 2.371 / 2.411
-   * - Detected-only mass (M\ :sub:`sun`)
+   * - Detected-pixel mass (M\ :sub:`sun`)
      - 30.35
      - 31.24
-   * - Mass with saturation lower limits (M\ :sub:`sun`)
+   * - Mass including finite lower limits (M\ :sub:`sun`)
      - 30.35
      - 31.24
-   * - Relative to BT12
-     - 1.00
+   * - Mass ratio to BT12
+     - 1.000
      - 1.030
 
-The conservative result is stable to the tested numerical choices.
-Varying the background over the one-standard-deviation scatter of the
-five box medians gives GTL/BT12 mass ratios of 1.026--1.036. Changing
-``grid_n`` from 4 through 10 gives 31.16--31.49 M\ :sub:`sun` and
-ratios of 1.027--1.038.
-Dilating the bright-source mask by three and six pixels gives ratios of
-1.031 and 1.033.
-
-The corrected result implements the intended BT12 lower-bound
-invariant: all 15,129 pixels in the cutout satisfy
-:math:`\Sigma_\mathrm{GTL}\geq\Sigma_\mathrm{BT12}`, so the integrated
-mass cannot decrease under the shared background and mask. Rubén's
-exact background and source-mask regions are still needed before
-assigning a publication value.
+All 15,129 pixels satisfy
+:math:`\Sigma_\mathrm{GTL}\geq\Sigma_\mathrm{BT12}`. The integrated mass
+therefore increases under the shared mask. The foreground fluctuation remains
+broad enough that it does not divide the filament out of the extinction map.
 
 .. image:: _static/sgrc_f480m_comparison.png
    :alt: Controlled Sgr C F480M comparison of BT12 and GTL maps
    :width: 100%
 
-Saturation terminology
-----------------------
+Sensitivity checks
+------------------
 
-The BT12 *selection* contains 129 pixels near the global minimum, of
-which 49 meet the independence separation. The GTL scan also has 49
-unique minima; it does **not** create more independent foreground
-measurements. That selection count is distinct from a map-level
-``within 2 sigma of the fitted foreground`` count. Under the latter
-common definition, BT12 has 55 pixels and GTL has 117.
+Changing the background by one standard deviation of the box medians gives
+GTL/BT12 mass ratios from 1.026 to 1.036. Values of ``grid_n`` from 4 through
+10 give GTL masses from 31.16 to 31.49 M\ :sub:`sun` and ratios from 1.027 to
+1.038. Dilating the bright-source mask by three and six pixels gives ratios of
+1.031 and 1.033.
 
-The initial direct-kriging model made 4,387 pixels locally
-saturation-consistent and 3,089 strict lower limits. It also reproduced
-a filament-shaped trough in the foreground and erased the extinction
-morphology. That result was a failed model diagnostic, not evidence for
-increased saturation, and is withdrawn.
+These tests support the sign and scale of the conservative correction in this
+cutout. A publication mass still requires the final aperture, source mask,
+and background regions.
 
-The replacement fits a robust plane but applies BT12 as a hard
-pointwise floor. Its automatic blend factor is 0.03, leaving 117
-locally saturation-consistent pixels and zero strict lower limits.
-Across ``grid_n=4`` through 10 the local counts are 113--136 and the
-strict count remains zero. The filament remains visible, no
-interpolation-shaped foreground structure is divided out of the map,
-and the GTL-minus-BT12 surface-density map is nonnegative everywhere.
+Saturation counts
+-----------------
 
-Uncertainty treatment
----------------------
+The word *saturated* refers to two related masks in this analysis. BT12 first
+selects pixels near the global minimum to estimate the foreground. The final
+map then identifies pixels whose observed intensity falls below the fitted
+foreground.
 
-The FITS products carry first-order per-pixel uncertainty from the
-``ERR`` image, the standard error among background-box medians, the
-robust-plane covariance, and a 30% opacity term. Those terms are useful
-for detected pixels, but they must not be blindly summed as independent
-pixels: background, foreground-trend, drizzle, and opacity errors are
-spatially correlated.
+The BT12 selection contains 129 near-minimum pixels, including 49 that meet
+the independence criterion. The GTL scan also has 49 unique minima, so it does
+not add independent foreground measurements. Relative to the fitted
+foreground, BT12 has 55 pixels within :math:`2\sigma`; conservative GTL has
+117. Neither map has a strict lower-limit pixel in this cutout.
 
-For an integrated mass, the recommended report is therefore layered:
+A direct kriging fit failed this check. It produced 4,387 near-saturation
+pixels, 3,089 strict lower limits, and a filament-shaped foreground trough.
+The current conservative model avoids that failure with a broad trend and a
+blend factor of 0.03.
 
-* quote the detected-pixel mass separately from any censored
-  lower-limit sum;
-* give the measured background, grid, and source-mask scenario ranges;
-* quote the 30% opacity scale as a fully correlated systematic
-  (9.10 M\ :sub:`sun` for BT12 and 9.37 M\ :sub:`sun` for GTL here);
-  and
-* do not assign a symmetric Gaussian error to saturated lower limits.
+Uncertainty
+-----------
 
-A publication-grade posterior should vary a common background offset,
-the spatial foreground realization, source mask, opacity, and distance
-in a Monte Carlo or censored Bayesian calculation. The current analytic
-map errors remain intentionally masked at censored pixels.
+The FITS products include first-order uncertainty from the ``ERR`` image,
+background-box standard error, foreground-plane covariance, and a 30% opacity
+term. Several terms are correlated across pixels, so an integrated mass
+cannot use the quadrature sum of every pixel error.
+
+Report the detected-pixel mass separately from a censored lower-limit sum.
+Give the background and source-mask sensitivity ranges, then quote the opacity
+scale as a correlated systematic. In this example the 30% opacity terms are
+9.10 M\ :sub:`sun` for BT12 and 9.37 M\ :sub:`sun` for GTL. Saturated lower
+limits do not have symmetric Gaussian errors.
+
+A publication posterior should vary the shared background level, foreground
+surface, source mask, opacity, and distance. A censored Bayesian model or a
+Monte Carlo calculation can preserve the one-sided information at saturated
+pixels.
 
 Opacity normalization
 ---------------------
 
-The correspondence reports the moderately coagulated OH94 thin-ice
-F480M opacity as about 9.76 cm\ :sup:`2` g\ :sup:`-1` for gas/dust 156.
-The supplied manuscript also reports 15.23 cm\ :sup:`2` g\ :sup:`-1`
-for gas/dust 100. GTLMapping treats these as the same filter
-convolution under different total-mass normalizations:
+The OH94 moderately coagulated thin-ice F480M opacity is 9.76
+cm\ :sup:`2` g\ :sup:`-1` at gas-to-dust ratio 156. At ratio 100, the same
+filter convolution gives:
 
 .. math::
 
-   9.76 \times \frac{156}{100} = 15.2256.
+   9.76 \times \frac{156}{100} = 15.2256\
+   \;\mathrm{cm^2\,g^{-1}}.
 
-No additional F480M file or opacity number is needed for the included
-registry. Extending the package to arbitrary filters and dust models
-would require the raw OH94 opacity table, chosen filter throughputs,
-and a documented weighting convention.
+Changing the gas-to-dust ratio changes the normalization of one opacity model.
+It does not create a second F480M dust law.
 
-Reproduce the pressure test
----------------------------
+Run the case study
+------------------
 
-From the repository root, with the plotting extra installed:
+Install the plotting extra, then run from the repository root:
 
 .. code-block:: console
 
    python examples/sgrc_f480m_compare.py F480M_registered.fits
 
-This writes BT12 and GTL FITS maps, a comparison figure, and a JSON
-record of the assumptions and sensitivity tests under
-``validation/sgrc_f480m``. Replace
-``touching_background_boxes`` in the example when Rubén's exact
-machine-readable regions are available.
-
-Slide audit
------------
-
-The supplied project slides correctly motivate spatially varying
-foreground emission and retain BT12 as a comparison method. However,
-the radiative-transfer fraction shown on slides 7 and 17 is inverted.
-The implemented and manuscript-consistent equation is:
-
-.. math::
-
-   \tau=-\ln\left[
-   \frac{I_\mathrm{obs}-I_\mathrm{fg}}
-        {I_\mathrm{bg}-I_\mathrm{fg}}\right].
-
-The slide claim that the new foreground adds approximately
-:math:`10^5` solar masses to Cloud C is not yet a validated package
-result. It requires a fixed aperture, distance, NIR correction,
-source-mask policy, opacity normalization, and propagated uncertainty
-before it should be used as a publication statement.
+The script writes BT12 and GTL FITS maps, a comparison figure, and a JSON file
+under ``validation/sgrc_f480m``. Replace ``touching_background_boxes`` when
+the final machine-readable background regions are available.

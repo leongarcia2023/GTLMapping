@@ -4,37 +4,23 @@
 [![Documentation Status](https://readthedocs.org/projects/gtlmapping/badge/?version=latest)](https://gtlmapping.readthedocs.io/en/latest/?badge=latest)
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](https://github.com/leongarcia2023/GTLMapping/blob/main/LICENSE)
 
-`GTLMapping` is an astronomy package for mid-infrared extinction
-(MIREX) mapping with a spatially varying foreground. It turns the
-prototype notebook into an inspectable pipeline with:
+GTLMapping makes mid-infrared extinction (MIREX) maps of infrared dark
+clouds. It includes the constant-foreground method of Butler & Tan (2012)
+and three spatial foreground models for testing how foreground structure
+changes the inferred column density.
 
-- WCS-aware Simon et al. (2006) cloud ellipses;
-- local saturation detection with overlapping aliasing windows;
-- an explicit paper-faithful BT12 constant-foreground mode;
-- a robust spatial trend with a hard BT12 foreground floor;
-- experimental kriging, RBF, spline, Gaussian, Cauchy, and flat models;
-- explicit notebook-compatible kriging for historical reproduction;
-- BT09-style LMF/SMF and JWST-style adjacent-box backgrounds;
-- filter-convolved OH94/WD01 opacity tables with explicit gas/dust scaling;
-- first-order intensity, kriging, background, and opacity uncertainties;
-- explicit masks, saturation lower limits, and foreground constraints;
-- multi-extension FITS output containing every modeled quantity; and
-- strict shape and celestial-grid checks, with optional reprojection.
+Every calculation remains inspectable. The package writes the foreground,
+background, optical depth, surface density, uncertainty, and diagnostic masks
+to a multi-extension FITS file. WCS checks catch misaligned images before they
+enter the radiative-transfer calculation.
 
-The package is alpha scientific software. Its implementation and
-interfaces are tested, but the new spatially varying foreground method
-still requires domain review and validation across additional IRDCs
-before publication claims are made.
+> GTLMapping is alpha scientific software. Its interfaces and numerical
+> contracts are tested. The spatial foreground models still need validation
+> on more clouds before they support general astrophysical claims.
 
-Three spatial profiles expose the modeling trade-off explicitly:
+## Installation
 
-- `conservative` stays closely anchored to the BT12 foreground while allowing a smooth spatial fluctuation.
-- `moderate` permits a stronger data-driven fluctuation without erasing cloud structure or producing new non-finite pixels.
-- `liberal` gives the spatial model the most freedom and is intended for sensitivity analysis, not as an automatic default.
-
-## Install
-
-From this repository:
+Install the current version from GitHub:
 
 ```bash
 git clone https://github.com/leongarcia2023/GTLMapping.git
@@ -42,30 +28,16 @@ cd GTLMapping
 python -m pip install .
 ```
 
-For development and documentation:
+Install the development tools when you want to run tests or build the
+documentation:
 
 ```bash
 python -m pip install -e ".[dev]"
 ```
 
-After a PyPI release, the intended installation command is:
+The package is not yet published on PyPI.
 
-```bash
-python -m pip install GTLMapping
-```
-
-## Data inputs
-
-The source distribution does not bundle science images or a cloud catalog.
-Supply the FITS image and `catalog.dat` (or an equivalent catalog path) when
-running a map. This keeps observational data and machine-specific paths out of
-the installable package.
-
-## License
-
-GTLMapping is distributed under the [BSD 3-Clause License](https://github.com/leongarcia2023/GTLMapping/blob/main/LICENSE).
-
-## Quick start
+## A first map
 
 ```python
 from gtlmapping import GTLMapper
@@ -73,13 +45,11 @@ from gtlmapping import GTLMapper
 mapper = GTLMapper.from_fits("1kx1k.fits")
 cloud = mapper.select_cloud("catalog.dat", "G028.37+00.07")
 
-samples = mapper.detect_foreground(noise_sigma=0.6)
+mapper.detect_foreground(noise_sigma=0.6)
 mapper.fit_foreground(
     method="conservative",
     noise_sigma=0.6,
 )
-
-# Use the aligned SMF product, or call estimate_background(method="smf").
 mapper.set_background_from_fits("SMFbg1.fits")
 
 result = mapper.compute(
@@ -89,61 +59,37 @@ result = mapper.compute(
 result.write("cloud_c_gtl.fits")
 ```
 
-The conservative default fits only a robust broad gradient to the
-window minima, then applies the historical GTL rule
-`foreground = maximum(spatial_foreground, BT12_foreground)`.
-Consequently the spatial model cannot lower the foreground or
-surface density relative to BT12 when the image, background, opacity,
-and valid-pixel set are held fixed. The default guardrails also prevent
-new strictly saturated pixels inside the fitted region.
-Exact notebook kriging compatibility is still available explicitly
-with `method="kriging"`,
-`kriging_duplicate_policy="repeat"` and
-`clip_to_sample_range=False`.
+The image and background must share a celestial grid. Install the `align`
+extra and pass `align=True` if you want GTLMapping to reproject the
+background.
 
-For an intermediate result with substantially fewer censored pixels, use the
-moderate profile:
+## Foreground models
+
+| Method | Foreground treatment | Best use |
+|---|---|---|
+| `bt12` | One value from independent saturated pixels | Published reference calculation |
+| `conservative` | A broad spatial trend with BT12 as a pointwise floor | Default spatial comparison |
+| `moderate` | A quadratic trend with a soft BT12 anchor and tight censoring limits | Intermediate sensitivity test |
+| `liberal` | A sample-driven quadratic trend with no hard BT12 floor | Upper-end sensitivity test |
+
+The conservative model cannot reduce surface density relative to BT12 when
+the image, background, opacity, and valid-pixel set are held fixed. Its
+default guardrail also prevents new strict saturation inside the fitted
+region.
+
+Moderate and liberal fits can create pixels whose transmitted intensity is
+only bounded from above. Their compute helpers assign finite lower limits and
+keep those pixels marked in the `SATURATED` extension. Treat the marks as
+censored measurements.
 
 ```python
-samples = mapper.detect_foreground(noise_sigma=0.6)
+mapper.detect_foreground(noise_sigma=0.6)
 mapper.fit_foreground(method="moderate", noise_sigma=0.6)
 mapper.set_background_from_fits("smf_background.fits")
 result = mapper.compute_moderate(kappa_cm2_g=7.5)
 ```
 
-Moderate GTL uses a 50% soft BT12 anchor, a 0.5% near-saturation budget,
-and a 0.01% strict lower-limit ceiling. These defaults sit between the
-hard-floor conservative profile and the sample-dominated liberal profile.
-
-For a controlled, more permissive interpretation, select the liberal
-foreground and compute censored pixels as finite lower limits:
-
-```python
-samples = mapper.detect_foreground(noise_sigma=0.6)
-mapper.fit_foreground(
-    method="liberal",
-    noise_sigma=0.6,
-    target_local_saturation_fraction=0.01,
-    maximum_strict_saturation_fraction=0.001,
-)
-mapper.set_background_from_fits("smf_background.fits")
-result = mapper.compute_liberal(
-    kappa_cm2_g=7.5,
-    bright_pixel_policy="allow",
-)
-```
-
-Unlike the conservative method, liberal GTL has no hard BT12 floor. It fits
-a robust quadratic trend to the GTL samples and raises its absolute level only
-within explicit near-saturation and strict-saturation budgets. The default
-BT12 soft-anchor weight is zero. `compute_liberal()` uses a `2 sigma`
-transmitted-intensity floor by default, records genuinely censored pixels in
-`SATURATED`, and records foreground/background feasibility adjustments in
-`FG_CONSTRAINT`. Finite values at `SATURATED` pixels are lower limits, not
-ordinary measurements.
-
-For a BT12 comparison map, replace foreground detection and
-interpolation with:
+Use the published BT12 calculation as the reference map:
 
 ```python
 mapper.fit_foreground(
@@ -153,24 +99,13 @@ mapper.fit_foreground(
 )
 ```
 
-This implements the BT12 mean saturated intensity minus `2 sigma`.
-The notebook's median-plus-1.0 comparison cell is not the published
-BT12 prescription.
+Kriging, RBF, spline, Gaussian, and Cauchy interpolation remain available for
+method experiments. They interpolate local minima and can imprint cloud
+structure on the foreground. The high-level default does not use them.
 
-If a background map already exists, it is checked in celestial
-coordinates before use:
+## JWST F480M data
 
-```python
-mapper.set_background_from_fits("background.fits")
-```
-
-To reproject a mismatched map, install `GTLMapping[align]` and pass
-`align=True`.
-
-## JWST F480M
-
-The supplied Sgr C product can load its science and uncertainty
-extensions together:
+Load the science and uncertainty extensions together:
 
 ```python
 mapper = GTLMapper.from_fits(
@@ -179,7 +114,6 @@ mapper = GTLMapper.from_fits(
     uncertainty_hdu="ERR",
 )
 
-# After selecting a target mask and fitting a foreground/background:
 result = mapper.compute(
     filter_name="F480M",
     gas_to_dust_ratio=156,
@@ -187,14 +121,13 @@ result = mapper.compute(
 )
 ```
 
-The built-in OH94 moderately coagulated thin-ice value is
-`9.76 cm2/g` at gas-to-dust ratio 156 and `15.2256 cm2/g` at ratio
-100. These are two normalizations of the same filter convolution, not
-competing F480M opacities.
+The built-in OH94 moderately coagulated thin-ice opacity is 9.76 cm2/g
+at gas-to-dust ratio 156. The same filter convolution gives 15.2256 cm2/g
+at ratio 100. Record the normalization with every result.
 
-When a spatial foreground exceeds the independently estimated
-off-cloud background, the default result masks that model conflict.
-To make the projection explicit and auditable:
+If a foreground estimate reaches the off-cloud background, inspect both
+surfaces. You can then impose a positive transmitted-intensity floor and keep
+the adjustment in the output:
 
 ```python
 mapper.constrain_foreground(
@@ -207,50 +140,38 @@ result = mapper.compute(
 )
 ```
 
-For the conservative method, this projection preserves the BT12 floor
-or raises an incompatibility error; it never silently lowers the
-foreground below BT12. The FITS product records adjusted pixels in
-`FG_CONSTRAINT` and
-the censored pixels in `SATURATED`; they should not be treated as
-ordinary detections.
+## Validation
 
-The controlled Sgr C comparison can be reproduced with:
+The controlled Sgr C case uses one background and mask policy for both BT12
+and conservative GTL. In the 123 by 123 pixel test region, the BT12 mass is
+30.35 solar masses and the conservative GTL mass is 31.24 solar masses. The
+filament remains visible, and the spatial model creates no new strict
+saturation holes.
+
+Run the case study with:
 
 ```bash
 python examples/sgrc_f480m_compare.py F480M_registered.fits
 ```
 
-Under the documented shared comparison background, the 123-by-123
-Rubén box contains 30.35 solar masses with BT12 and 31.24 solar masses
-with the BT12-floored spatial foreground. Every pixel retains or
-increases its BT12 surface density, the comparable within-`2 sigma`
-count grows from 55 to 117, and no new strict-saturation holes are
-introduced. The earlier 68.26-solar-mass direct-kriging result failed
-the morphology and saturation sanity checks and is withdrawn. See the
-[Sgr C audit](docs/jwst_sgrc.rst).
+The [Sgr C case study](docs/jwst_sgrc.rst) records the regions, assumptions,
+and sensitivity tests. The [validation page](docs/validation.rst) covers the
+Cloud C regression test and the Cloud F/H portability checks.
 
-## Command line
+## Data and scientific scope
 
-```bash
-gtlmapping observed.fits background.fits output.fits \
-  --catalog catalog.dat \
-  --cloud G028.37+00.07
-```
+Science images and `catalog.dat` stay outside the Python distribution. Supply
+their paths when you run a map. This keeps large observations and local file
+paths out of the package.
 
-Use `--align-background` only when reprojection is intended.
+GTLMapping follows the MIREX work of Butler & Tan (2009, 2012), later
+high-dynamic-range extensions, and the dust opacities of Ossenkopf & Henning
+(1994). The [method documentation](docs/scientific_method.rst) states where
+the package follows those papers and where it introduces new assumptions.
 
-## Scientific lineage
+See the [full documentation](https://gtlmapping.readthedocs.io/en/latest/),
+[validation report](VALIDATION_REPORT.md), and [release checklist](RELEASE_CHECKLIST.md).
 
-The implementation builds on the MIREX framework of Butler & Tan
-(2009, 2012), subsequent high-dynamic-range and multiwavelength
-extensions, the Simon et al. (2006) MSX IRDC catalog, and the
-Ossenkopf & Henning (1994) dust-opacity models. See the
-[scientific method](docs/scientific_method.rst) and
-[references](docs/references.rst).
+## License
 
-## Repository status
-
-See [VALIDATION_REPORT.md](VALIDATION_REPORT.md) for the notebook and
-Cloud C pressure-test findings. See
-[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) before making the
-repository public or publishing to PyPI.
+GTLMapping is distributed under the [BSD 3-Clause License](LICENSE).

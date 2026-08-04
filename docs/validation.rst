@@ -1,131 +1,128 @@
 Validation
 ==========
 
-Automated tests
----------------
+Software tests
+--------------
 
-The test suite covers:
+The automated suite checks four parts of the package:
 
-- the fixed-width Simon catalog format and Cloud C lookup;
-- WCS-aware ellipses and sub-pixel grid mismatch detection;
-- notebook-compatible and edge-complete aliasing scan modes;
-- duplicate merging, stable pseudo-inverse kriging, and explicit
-  repeated-coordinate compatibility;
-- the paper-faithful BT12 constant foreground;
-- the hard-BT12-floor spatial trend, monotonicity, and saturation
-  guardrails;
-- the sample-driven liberal trend, separate saturation budgets, and finite
-  flagged lower limits;
-- all primary foreground interpolators;
-- synthetic SMF and adjacent-box background recovery;
-- filter-convolved opacity and gas/dust scaling;
-- radiative transfer, invalid masks, lower limits, and bright-pixel
-  policies;
-- first-order uncertainty propagation;
-- the physical surface-density unit conversion; and
-- multi-extension FITS output.
+.. list-table::
+   :header-rows: 1
 
-Run it with:
+   * - Area
+     - Tests
+   * - Data and geometry
+     - Simon catalog parsing, cloud lookup, WCS ellipses, grid mismatch, and FITS output
+   * - Foreground and background
+     - BT12, the three GTL profiles, legacy interpolation, SMF, LMF, and adjacent boxes
+   * - Radiative transfer
+     - Opacity scaling, masks, lower limits, bright-pixel policies, and physical units
+   * - Uncertainty
+     - ERR input, foreground variance, background error, and opacity error
+
+Run the suite from the repository root:
 
 .. code-block:: console
 
    python -m pytest
 
-Cloud C pressure test
----------------------
+The tests establish that the implementation follows its documented numerical
+rules. The cases below ask whether those rules behave sensibly on real cloud
+images.
 
-The intended ``1kx1k.fits`` image is available. The package reproduces
-the notebook's 81 windows, 48 accepted minima, 33 rejected windows, and
-29 unique foreground coordinates. Its raw notebook-compatible kriging
-range agrees with a direct execution to numerical precision.
-
-Inside the Simon Cloud C ellipse, the corrected BT12 implementation
-finds 53 saturated pixels and a foreground of 29.3361 MJy
-sr\ :sup:`-1`. The notebook's BT12 comparison cell used the wrong
-statistic and offset sign.
-
-Leave-one-location-out errors remain large—roughly 5.4 to 10.6 MJy
-sr\ :sup:`-1` in mean absolute error depending on interpolation
-method. Stable pseudo-inverse kriging reduces the historical worst
-fold from 60.5 to 30.8 MJy sr\ :sup:`-1`, but multi-cloud validation
-remains a release requirement.
-
-The intended ``1kx1k.fits`` and ``SMFbg1.fits`` grids match exactly.
-``1kx1k.fits`` is an exact slice of the parent GLIMPSE IRAC-4 mosaic,
-whose header declares MJy/sr. Complete numerical results and method
-boundaries are in ``VALIDATION_REPORT.md``.
-
-With the corrected hard-floor spatial model, the Cloud C foreground
-inside the Simon ellipse is 29.3361/30.7197/33.9163 MJy
-sr\ :sup:`-1` (min/median/max), compared with the constant
-29.3361-MJy sr\ :sup:`-1` BT12 value. The within-:math:`2\sigma`
-count increases from 22 to 68, no new strictly saturated pixels are
-introduced, and the summed surface density increases by 3.91 percent.
-All 761,116 ellipse pixels satisfy
-:math:`\Sigma_\mathrm{GTL}\geq\Sigma_\mathrm{BT12}`.
-
-JWST Sgr C pressure test
-------------------------
-
-The package reproduces the supplied F480M SCI/ERR interface and Rubén
-BT12 foreground in the 123-by-123 filament cutout. The ERR median is
-0.1023237 MJy sr\ :sup:`-1`; 129 saturated pixels produce a foreground
-of 2.3053355 MJy sr\ :sup:`-1`; and 49 remain independent at 0.74
-arcsec.
-
-The first direct-kriging comparison failed the physical sanity check:
-it made 4,387 pixels locally saturation-consistent, made 3,089 strict
-lower limits, and erased the filament morphology. That result is
-withdrawn. The hard-floor conservative default retains the filament,
-increases the comparable within-:math:`2\sigma` count from 55 to 117,
-and introduces no strict lower-limit holes. Its mass is
-31.24 M\ :sub:`sun` versus 30.35 M\ :sub:`sun` for BT12. See
-:doc:`jwst_sgrc`.
-
-The exact Rubén mass remains pending the machine-readable adjacent
-background boxes and aperture. See :doc:`jwst_sgrc`.
-
-Cloud F and H profile portability test
----------------------------------------
-
-The Simon catalog entries ``G034.43+00.24`` (Cloud F) and
-``G035.39-00.33`` (Cloud H) load without hand-entering ellipse geometry.
-``CloudF.fits`` contains the complete F ellipse; ``IRDCCloudH.fits`` contains
-the complete H ellipse. The older ``CloudH.fits`` footprint clips the H
-ellipse and is not used for the integrated comparison.
-
-With the default liberal budgets, Cloud F increases from 36 BT12-selected
-near-minimum pixels to 833 locally saturation-consistent pixels, including 81
-strictly censored lower limits. Cloud H increases from 53 BT12-selected pixels
-to 616 locally saturation-consistent pixels, including 259 lower limits. The
-shared-background, nonnegative summed surface-density proxies increase by
-16.61% and 25.56%, respectively, relative to BT12. Both filamentary
-morphologies remain visible.
-
-The moderate profile retains 268 locally saturation-consistent pixels and 9
-strict lower limits for Cloud F; for Cloud H it retains 112 and 26. Its summed
-surface-density proxies are 9.89% and 8.38% above BT12, between the
-conservative increases of 1.38%/2.26% and liberal increases of
-16.61%/25.56%.
-
-In the validation figures, hollow magenta symbols mark finite censored lower
-limits; they are not NaNs. Independently, the surface-density color map is
-displayed only through 0.5 g cm\ :sup:`-2`, so distinct values above that
-ceiling share the same red/pink display color. The FITS arrays retain their
-actual values.
-
-Every finite input pixel inside both ellipses receives a finite surface
-density; no invalid-background pixels are introduced. The lower-limit pixels
-remain flagged rather than being treated as detections. These are portability
-and numerical-contract results, not a claim that the default 1%/0.1%
-saturation budgets are scientifically optimal. Those budgets require
-sensitivity analysis and independent validation before publication.
-
-Interpretation boundary
+Cloud C regression case
 -----------------------
 
-Passing software tests establishes that interfaces, units, masks,
-file handling, and numerical contracts behave as specified. It does
-not establish that a spatially varying interpolated foreground is an
-unbiased physical estimator. That requires comparison with independent
-data and review by the scientific team.
+The ``1kx1k.fits`` image reproduces the prototype notebook's 81 windows, 48
+accepted minima, 33 rejected windows, and 29 unique foreground coordinates.
+The notebook-compatible kriging surface agrees with a direct execution to
+numerical precision.
+
+Inside the Simon Cloud C ellipse, the corrected BT12 routine finds 53
+near-minimum pixels and a foreground of 29.3361 MJy sr\ :sup:`-1`. The
+prototype's comparison cell used a median and the wrong offset sign, which
+explains the earlier disagreement.
+
+Cross-validation remains demanding. Leave-one-location-out mean absolute
+errors range from about 5.4 to 10.6 MJy sr\ :sup:`-1` across the interpolation
+methods. Stable kriging reduces the worst historical fold from 60.5 to 30.8
+MJy sr\ :sup:`-1`, but the remaining errors rule out treating a numerically
+stable surface as a validated physical foreground.
+
+The conservative foreground inside the ellipse has a min / median / max of
+29.3361 / 30.7197 / 33.9163 MJy sr\ :sup:`-1`, compared with the constant
+BT12 value of 29.3361 MJy sr\ :sup:`-1`. It increases the
+within-:math:`2\sigma` count from 22 to 68 and the summed surface density by
+3.91%. It creates no new strict saturation, and all 761,116 ellipse pixels
+satisfy :math:`\Sigma_\mathrm{GTL}\geq\Sigma_\mathrm{BT12}`.
+
+The input image and ``SMFbg1.fits`` share the same grid. ``1kx1k.fits`` is an
+exact slice of its parent GLIMPSE IRAC-4 mosaic, whose FITS header gives
+MJy/sr as the intensity unit. ``VALIDATION_REPORT.md`` contains the complete
+numerical record.
+
+Sgr C F480M case
+----------------
+
+The F480M test loads the SCI and ERR extensions together and reproduces the
+BT12 foreground in a 123 by 123 pixel filament cutout. The median ERR is
+0.1023237 MJy sr\ :sup:`-1`. The BT12 selection has 129 pixels, 49 of which
+meet the 0.74 arcsec independence criterion, and gives a foreground of
+2.3053355 MJy sr\ :sup:`-1`.
+
+Raw kriging fails the morphology check: 3,089 pixels become strict lower
+limits and the fitted foreground copies the filament. The conservative model
+retains the filament, raises the shared within-:math:`2\sigma` count from 55
+to 117, and creates no strict lower-limit holes. With one background and mask
+policy, its mass is 31.24 M\ :sub:`sun` versus 30.35 M\ :sub:`sun` for BT12.
+
+The :doc:`jwst_sgrc` page gives the comparison boxes and sensitivity tests.
+The final publication mass remains pending the author-defined aperture and
+background regions.
+
+Cloud F and H portability cases
+-------------------------------
+
+The Simon catalog entries ``G034.43+00.24`` and ``G035.39-00.33`` load Cloud
+F and Cloud H without hand-entered ellipses. ``CloudF.fits`` covers the full F
+ellipse. ``IRDCCloudH.fits`` covers the full H ellipse; the older
+``CloudH.fits`` clips it and is excluded from integrated comparisons.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Profile
+     - Cloud F increase over BT12
+     - Cloud H increase over BT12
+   * - Conservative
+     - 1.38%
+     - 2.26%
+   * - Moderate
+     - 9.89%
+     - 8.38%
+   * - Liberal
+     - 16.61%
+     - 25.56%
+
+Moderate GTL produces 9 strict lower limits in Cloud F and 26 in Cloud H.
+Liberal GTL produces 81 and 259. Every finite input pixel inside both ellipses
+still receives a finite surface-density value; the lower-limit mask preserves
+which values are censored.
+
+The validation plots use hollow magenta symbols for finite lower limits. Their
+surface-density color scale ends at 0.5 g cm\ :sup:`-2`, so pixels above that
+value share one display color even though the FITS file keeps their distinct
+values.
+
+These cases show that the same catalog and mapping interface works across
+three clouds. They do not establish that the default saturation budgets are
+optimal. Publication work should vary the budgets and compare the results
+with an independent column-density tracer.
+
+Scientific boundary
+-------------------
+
+Passing the test suite establishes file handling, units, masks, and numerical
+behavior. It cannot show that an interpolated foreground is an unbiased
+physical estimate. That claim requires more clouds, independent data, and
+review by the scientific team.
