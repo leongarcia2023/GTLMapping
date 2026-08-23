@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.4.1 - 2026-08-23
+
+- Enforce the foreground hierarchy
+  ``BT12 <= conservative <= moderate <= liberal`` for the named profiles.
+- Retain the sample-driven quadratic shapes, but admit only their positive
+  enhancement above the preceding profile and blend that enhancement down
+  when required by the documented censoring budgets.
+- Add regression coverage for pointwise foreground and surface-density
+  ordering across all named profiles.
 - Add BSD 3-Clause licensing and standards-compliant SPDX package metadata.
 - Add canonical GitHub project links, artifact validation, and clean-wheel
   smoke testing to the release workflow.

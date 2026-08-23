@@ -73,4 +73,4 @@ __all__ = [
     "read_simon_catalog",
 ]
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"

@@ -180,11 +180,12 @@ def test_liberal_foreground_is_spatial_and_controls_saturation() -> None:
     assert result.method == "liberal"
     assert np.all(np.isfinite(result.values))
     assert np.ptp(result.values) > 0
-    assert diagnostics["anchor_policy"] == (
-        "sample_trend_with_optional_soft_bt12"
-    )
+    assert diagnostics["anchor_policy"] == "ordered_one_sided_floor"
     assert diagnostics["bt12_anchor_weight"] == 0.0
-    assert not diagnostics["bt12_floor_enforced"]
+    assert diagnostics["bt12_floor_enforced"]
+    assert diagnostics["ordering_floor_method"] == "moderate"
+    assert diagnostics["ordering_floor_enforced"]
+    assert diagnostics["foreground_below_ordering_floor_count"] == 0
     assert diagnostics["more_local_saturation_than_bt12"]
     assert diagnostics["local_saturation_count"] > (
         diagnostics["reference_local_saturation_count"]
@@ -217,6 +218,11 @@ def test_mapper_compute_liberal_returns_finite_flagged_lower_limits(
     assert not result.invalid_background_mask.any()
     assert not np.ma.getmaskarray(result.surface_density).any()
     assert np.all(np.isfinite(result.surface_density.data))
+    assert mapper.foreground_result.diagnostics[
+        "preserved_foreground_floor"
+    ] == pytest.approx(
+        mapper.foreground_result.diagnostics["reference_foreground"]
+    )
     assert result.metadata["saturation_policy"] == "lower_limit"
 
 
@@ -238,6 +244,9 @@ def test_moderate_profile_reduces_censoring_and_computes_lower_limits(
     assert diagnostics["bt12_anchor_weight"] == 0.5
     assert diagnostics["target_local_saturation_fraction"] == 0.005
     assert diagnostics["maximum_strict_saturation_fraction"] == 0.0001
+    assert diagnostics["ordering_floor_method"] == "conservative"
+    assert diagnostics["ordering_floor_enforced"]
+    assert diagnostics["foreground_below_ordering_floor_count"] == 0
     assert diagnostics["more_local_saturation_than_bt12"]
     assert 0 < diagnostics["strict_saturation_count"] <= (
         diagnostics["strict_saturation_limit_count"]
@@ -252,6 +261,72 @@ def test_moderate_profile_reduces_censoring_and_computes_lower_limits(
     assert not result.invalid_background_mask.any()
     assert not np.ma.getmaskarray(result.surface_density).any()
     assert np.all(np.isfinite(result.surface_density.data))
+    assert mapper.foreground_result.diagnostics[
+        "preserved_foreground_floor"
+    ] == pytest.approx(
+        mapper.foreground_result.diagnostics["reference_foreground"]
+    )
+
+
+def test_named_profiles_are_pointwise_ordered() -> None:
+    image, samples = _liberal_case()
+    kwargs = {
+        "noise_sigma": 1.0,
+        "min_separation_arcsec": 8.0,
+        "fallback_pixel_scale_arcsec": 1.0,
+    }
+    conservative = fit_conservative_foreground(samples, image, **kwargs)
+    moderate = fit_moderate_foreground(samples, image, **kwargs)
+    liberal = fit_liberal_foreground(samples, image, **kwargs)
+
+    assert np.all(moderate.values >= conservative.values - 1e-12)
+    assert np.all(liberal.values >= moderate.values - 1e-12)
+
+    background = np.full_like(image, 20.0)
+    surface_density = []
+    for foreground in (
+        conservative.values,
+        moderate.values,
+        liberal.values,
+    ):
+        _, sigma, _, _, _ = compute_extinction(
+            image,
+            background,
+            foreground,
+            bright_pixel_policy="zero",
+        )
+        surface_density.append(sigma)
+    common = np.logical_and.reduce(
+        [~np.ma.getmaskarray(values) for values in surface_density]
+    )
+    assert np.all(
+        surface_density[1].data[common]
+        >= surface_density[0].data[common] - 1e-12
+    )
+    assert np.all(
+        surface_density[2].data[common]
+        >= surface_density[1].data[common] - 1e-12
+    )
+
+    lower_limit_sums = []
+    for foreground in (
+        conservative.values,
+        moderate.values,
+        liberal.values,
+    ):
+        _, sigma, _, _, _ = compute_extinction(
+            image,
+            background,
+            foreground,
+            bright_pixel_policy="zero",
+            saturation_policy="lower_limit",
+            intensity_floor=2.0,
+        )
+        lower_limit_sums.append(
+            float(np.sum(np.maximum(sigma.filled(0.0), 0.0)))
+        )
+    assert lower_limit_sums[0] <= lower_limit_sums[1]
+    assert lower_limit_sums[1] <= lower_limit_sums[2]
 
 
 @pytest.mark.parametrize("method", ["flat", "gaussian", "cauchy", "rbf", "kriging"])

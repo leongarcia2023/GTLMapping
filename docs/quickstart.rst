@@ -90,16 +90,16 @@ profiles:
      - Broad spatial trend with a pointwise BT12 floor
      - Default spatial comparison
    * - ``moderate``
-     - Quadratic trend with a 50% soft BT12 anchor
+     - Quadratic trend ordered above conservative GTL
      - Intermediate sensitivity test
    * - ``liberal``
-     - Quadratic trend driven by the samples, with no hard BT12 floor
+     - Sample-driven quadratic ordered above moderate GTL
      - Permissive sensitivity test
 
-The conservative fit limits the fraction of pixels near saturation and allows
-no new strict saturation inside the fitted region by default. At a fixed
-background and opacity, and for the same valid pixels, its BT12 floor prevents
-a decrease in surface density relative to BT12.
+The profiles enforce ``BT12 <= conservative <= moderate <= liberal``
+pointwise. At a fixed background and opacity, their surface densities follow
+the same order on jointly valid, uncensored pixels. Moderate and liberal use
+progressively larger explicit censoring budgets.
 
 Moderate GTL allows 0.5% of pixels near saturation and caps strict censoring
 at 0.01%:

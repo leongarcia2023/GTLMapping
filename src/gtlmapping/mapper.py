@@ -85,12 +85,18 @@ class GTLMapper:
                 path,
                 hdu=uncertainty_hdu,
             )
-            validate_compatible_grids(
-                data.shape,
-                wcs,
-                uncertainty.shape,
-                uncertainty_wcs,
-            )
+            if uncertainty.shape != data.shape:
+                raise ValueError(
+                    "The uncertainty image shape does not match the science "
+                    f"image: {uncertainty.shape} versus {data.shape}."
+                )
+            if uncertainty_wcs.has_celestial:
+                validate_compatible_grids(
+                    data.shape,
+                    wcs,
+                    uncertainty.shape,
+                    uncertainty_wcs,
+                )
         return cls(
             data,
             header=header,
@@ -565,7 +571,7 @@ class GTLMapper:
         self,
         *,
         intensity_floor: float | np.ndarray | None = None,
-        minimum_foreground: float | None = 0.0,
+        minimum_foreground: float | None = None,
         **kwargs: Any,
     ) -> MappingResult:
         """Compute a finite liberal map with censored pixels as lower limits.
@@ -627,7 +633,7 @@ class GTLMapper:
         self,
         *,
         intensity_floor: float | np.ndarray | None = None,
-        minimum_foreground: float | None = 0.0,
+        minimum_foreground: float | None = None,
         **kwargs: Any,
     ) -> MappingResult:
         """Compute a finite moderate map with flagged lower limits.

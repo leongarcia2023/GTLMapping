@@ -512,17 +512,20 @@ def fit_liberal_foreground(
     floor: float | None = 0.0,
     clip_to_sample_range: bool = True,
     fallback_pixel_scale_arcsec: float = 1.2,
+    _ordered_floor: InterpolationResult | None = None,
 ) -> InterpolationResult:
     """Fit a controlled, sample-driven spatial foreground.
 
     This is the deliberately more permissive counterpart to
     :func:`fit_conservative_foreground`. It fits a robust first- or
     second-degree spatial trend directly to the GTL local-minimum samples and
-    does not impose BT12 as a hard floor. The absolute level is shifted upward
-    until either the requested near-saturation budget or the strict-saturation
+    uses BT12 only through a one-sided ordering floor: the final liberal
+    foreground cannot fall below moderate GTL, which cannot fall below
+    conservative GTL or BT12. The absolute level is shifted upward until
+    either the requested near-saturation budget or the strict-saturation
     budget is reached. Consequently the model can identify more saturated
     pixels than BT12 without allowing an unconstrained interpolator to imprint
-    every local minimum into the extinction map.
+    every local minimum into the extinction map or lower the inferred mass.
 
     ``target_local_saturation_fraction`` controls pixels satisfying
     ``I_obs <= I_fg + 2 * noise_sigma``. Truly censored pixels satisfy
@@ -533,9 +536,9 @@ def fit_liberal_foreground(
     :meth:`gtlmapping.GTLMapper.compute_liberal` to apply the foreground/
     background feasibility projection and lower-limit calculation together.
 
-    BT12 is evaluated for comparison diagnostics. It affects the result only
-    when ``bt12_anchor_weight`` is explicitly set above zero, making the
-    degree of BT12 dependence visible and configurable.
+    ``bt12_anchor_weight`` controls the two-sided pull on the raw quadratic
+    trend. It is separate from the one-sided ordering floor, which is always
+    enforced for the named moderate and liberal profiles.
     """
 
     data = np.asarray(image, dtype=float)
@@ -571,6 +574,22 @@ def fit_liberal_foreground(
     eligible = mask & np.isfinite(data)
     if not np.any(eligible):
         raise ValueError("No finite image pixels are inside region_mask.")
+
+    if _ordered_floor is None:
+        _ordered_floor = fit_moderate_foreground(
+            samples,
+            data,
+            wcs=wcs,
+            region_mask=mask,
+            noise_sigma=noise_sigma,
+            min_separation_arcsec=min_separation_arcsec,
+            foreground_margin=foreground_margin,
+            robust_loss=robust_loss,
+            trend_degree=trend_degree,
+            floor=floor,
+            clip_to_sample_range=clip_to_sample_range,
+            fallback_pixel_scale_arcsec=fallback_pixel_scale_arcsec,
+        )
 
     margin = (
         2.0 * float(noise_sigma)
@@ -759,6 +778,76 @@ def fit_liberal_foreground(
             0.0,
         )
 
+    raw_foreground = foreground
+    raw_local_count = selected_local_count
+    raw_strict_count = selected_strict_count
+    ordered_floor = np.asarray(_ordered_floor.values, dtype=float)
+    if ordered_floor.shape != data.shape:
+        raise ValueError("The ordered foreground floor must match image.shape.")
+    if np.any(eligible & ~np.isfinite(ordered_floor)):
+        raise ValueError(
+            "The ordered foreground floor is non-finite inside region_mask."
+        )
+    floor_local_count = int(
+        np.count_nonzero(
+            eligible
+            & (data <= ordered_floor + 2.0 * float(noise_sigma))
+        )
+    )
+    floor_strict_count = int(
+        np.count_nonzero(eligible & (data <= ordered_floor))
+    )
+    local_limit = max(local_limit, floor_local_count)
+    strict_limit = max(strict_limit, floor_strict_count)
+    ordered_enhancement = np.maximum(raw_foreground - ordered_floor, 0.0)
+
+    def ordered_counts(blend: float) -> tuple[int, int]:
+        candidate = ordered_floor + float(blend) * ordered_enhancement
+        local_count = int(
+            np.count_nonzero(
+                eligible
+                & (data <= candidate + 2.0 * float(noise_sigma))
+            )
+        )
+        strict_count = int(np.count_nonzero(eligible & (data <= candidate)))
+        return local_count, strict_count
+
+    ordering_blend = 1.0
+    selected_local_count, selected_strict_count = ordered_counts(
+        ordering_blend
+    )
+    if (
+        selected_local_count > local_limit
+        or selected_strict_count > strict_limit
+    ):
+        lower_blend = 0.0
+        upper_blend = 1.0
+        for _ in range(80):
+            midpoint = 0.5 * (lower_blend + upper_blend)
+            local_count, strict_count = ordered_counts(midpoint)
+            if local_count <= local_limit and strict_count <= strict_limit:
+                lower_blend = midpoint
+            else:
+                upper_blend = midpoint
+        ordering_blend = float(lower_blend)
+        selected_local_count, selected_strict_count = ordered_counts(
+            ordering_blend
+        )
+    foreground = ordered_floor + ordering_blend * ordered_enhancement
+
+    floor_variance = (
+        np.zeros(data.shape, dtype=float)
+        if _ordered_floor.variance is None
+        else np.maximum(
+            np.asarray(_ordered_floor.variance, dtype=float),
+            0.0,
+        )
+    )
+    active_enhancement = raw_foreground > ordered_floor
+    trend_variance = floor_variance + (
+        ordering_blend**2 * trend_variance * active_enhancement
+    )
+
     return InterpolationResult(
         values=foreground,
         method="liberal",
@@ -779,9 +868,27 @@ def fit_liberal_foreground(
             "trend_degree": int(trend_degree),
             "robust_loss": robust_loss,
             "trend_coefficients": fit.x.tolist(),
-            "anchor_policy": "sample_trend_with_optional_soft_bt12",
+            "anchor_policy": "ordered_one_sided_floor",
             "bt12_anchor_weight": float(bt12_anchor_weight),
-            "bt12_floor_enforced": False,
+            "bt12_floor_enforced": True,
+            "ordering_floor_method": _ordered_floor.method,
+            "ordering_floor_enforced": True,
+            "ordering_blend_factor": ordering_blend,
+            "raw_foreground_below_ordering_floor_count": int(
+                np.count_nonzero(
+                    eligible & (raw_foreground < ordered_floor)
+                )
+            ),
+            "foreground_below_ordering_floor_count": int(
+                np.count_nonzero(eligible & (foreground < ordered_floor))
+            ),
+            "ordering_floor_local_saturation_count": floor_local_count,
+            "ordering_floor_strict_saturation_count": floor_strict_count,
+            "raw_profile_local_saturation_count": raw_local_count,
+            "raw_profile_strict_saturation_count": raw_strict_count,
+            "variance_combination": (
+                "ordered_floor_plus_scaled_candidate_without_covariance"
+            ),
             "foreground_margin": margin,
             "level_shift": selected_shift,
             "clip_to_sample_range": bool(clip_to_sample_range),
@@ -836,16 +943,28 @@ def fit_moderate_foreground(
     """Fit the intermediate GTL foreground preset.
 
     Moderate GTL uses the same controlled robust spatial trend as liberal GTL
-    but defaults to a 50-percent soft BT12 anchor, a 0.5-percent
-    near-saturation budget, and a 0.01-percent strict-censoring ceiling. It is
-    intended for maps where the conservative hard floor is too restrictive but
-    the liberal lower-limit overlay obscures too much structure.
+    but defaults to a 50-percent soft BT12 pull, a 0.5-percent near-saturation
+    budget, and a 0.01-percent strict-censoring ceiling. Conservative GTL is a
+    one-sided pointwise floor, so moderate GTL cannot lower its foreground or
+    inferred surface density on jointly valid, uncensored pixels.
 
     The parameters remain explicit and can be changed for sensitivity tests.
     Any strictly saturated pixels are still censored measurements and should
     be computed with :meth:`gtlmapping.GTLMapper.compute_moderate`.
     """
 
+    conservative_floor = fit_conservative_foreground(
+        samples,
+        image,
+        wcs=wcs,
+        region_mask=region_mask,
+        noise_sigma=noise_sigma,
+        min_separation_arcsec=min_separation_arcsec,
+        foreground_margin=foreground_margin,
+        robust_loss=robust_loss,
+        floor=floor,
+        fallback_pixel_scale_arcsec=fallback_pixel_scale_arcsec,
+    )
     result = fit_liberal_foreground(
         samples,
         image,
@@ -864,13 +983,14 @@ def fit_moderate_foreground(
         floor=floor,
         clip_to_sample_range=clip_to_sample_range,
         fallback_pixel_scale_arcsec=fallback_pixel_scale_arcsec,
+        _ordered_floor=conservative_floor,
     )
     diagnostics = dict(result.diagnostics)
     diagnostics.update(
         {
             "profile": "moderate",
             "profile_description": (
-                "soft_bt12_anchor_with_reduced_saturation_budgets"
+                "conservative_floor_with_soft_bt12_spatial_trend"
             ),
         }
     )

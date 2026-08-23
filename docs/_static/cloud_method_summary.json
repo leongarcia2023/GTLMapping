@@ -27,22 +27,22 @@
         "ratio_to_bt12": 1.039059997504261
       },
       "moderate": {
-        "surface_density_sum": 49101.81308735378,
-        "local_saturation_pixels": 183,
+        "surface_density_sum": 50849.22473300629,
+        "local_saturation_pixels": 243,
         "strict_lower_limit_pixels": 77,
-        "foreground_min": 27.22743288222111,
+        "foreground_min": 29.33607847105782,
         "foreground_median": 37.40223627300918,
         "foreground_max": 45.61342683974063,
-        "ratio_to_bt12": 1.092573966946945
+        "ratio_to_bt12": 1.1314559624077514
       },
       "liberal": {
-        "surface_density_sum": 49316.51398872383,
-        "local_saturation_pixels": 1104,
+        "surface_density_sum": 54928.097287408214,
+        "local_saturation_pixels": 1186,
         "strict_lower_limit_pixels": 762,
-        "foreground_min": 20.081436636429835,
-        "foreground_median": 40.43104341800598,
-        "foreground_max": 56.85342455146889,
-        "ratio_to_bt12": 1.097351318347384
+        "foreground_min": 29.33607847105782,
+        "foreground_median": 40.43090554564276,
+        "foreground_max": 56.852912902832024,
+        "ratio_to_bt12": 1.222215746766543
       }
     },
     "figure": "cloud_c_method.png"
@@ -84,13 +84,13 @@
         "ratio_to_bt12": 1.0988655283945858
       },
       "liberal": {
-        "surface_density_sum": 7360.722415069002,
+        "surface_density_sum": 7364.100051531521,
         "local_saturation_pixels": 833,
         "strict_lower_limit_pixels": 81,
-        "foreground_min": 26.833206652893118,
+        "foreground_min": 27.04026669183528,
         "foreground_median": 28.202112030939603,
         "foreground_max": 29.748357407682725,
-        "ratio_to_bt12": 1.1661442743653008
+        "ratio_to_bt12": 1.1666793864371254
       }
     },
     "figure": "cloud_f_method.png"
@@ -123,13 +123,13 @@
         "ratio_to_bt12": 1.02262284290628
       },
       "moderate": {
-        "surface_density_sum": 7823.488321151378,
+        "surface_density_sum": 7823.830383965793,
         "local_saturation_pixels": 112,
         "strict_lower_limit_pixels": 26,
-        "foreground_min": 21.39177408116467,
+        "foreground_min": 21.652113123258054,
         "foreground_median": 22.872223828278944,
         "foreground_max": 25.13933224083701,
-        "ratio_to_bt12": 1.0838399350550583
+        "ratio_to_bt12": 1.0838873232945931
       },
       "liberal": {
         "surface_density_sum": 9063.480126206823,

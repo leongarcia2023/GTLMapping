@@ -105,19 +105,26 @@ monotonic in foreground:
    \frac{1}{I_\mathrm{obs}-I_\mathrm{fg}} -
    \frac{1}{I_\mathrm{bg}-I_\mathrm{fg}} > 0.
 
-The pointwise BT12 floor makes the conservative surface density greater than
-or equal to BT12 on every pixel that is valid in both maps. A stronger
-foreground can still reduce a sum over detections by creating masked saturated
-pixels. The default limit on strict saturation prevents that loss inside the
-fitted region.
+The named profiles enforce the pointwise ordering
+
+.. math::
+
+   I_{\mathrm{fg,BT12}} \leq I_{\mathrm{fg,cons}}
+   \leq I_{\mathrm{fg,mod}} \leq I_{\mathrm{fg,lib}}.
+
+Their surface densities therefore have the same ordering on every jointly
+valid, uncensored pixel. Moderate and liberal use progressively larger,
+explicit budgets for censored lower limits; comparisons must retain those
+masks rather than treating the limits as ordinary detections.
 
 Moderate spatial foreground
 ---------------------------
 
-The ``moderate`` profile fits a quadratic GTL trend with a 50% soft BT12
-anchor. It allows 0.5% of pixels near saturation and caps strict censoring at
-0.01%. These settings admit more foreground variation than the conservative
-fit while producing fewer pixels with lower limits than liberal GTL.
+The ``moderate`` profile fits a quadratic GTL trend with a 50% two-sided BT12
+pull, then applies conservative GTL as a one-sided pointwise floor. It allows
+0.5% of pixels near saturation and caps strict censoring at 0.01%. These
+settings admit more foreground variation than the conservative fit while
+producing fewer pixels with lower limits than liberal GTL.
 
 ``compute_moderate`` applies the floor on transmitted intensity and
 foreground/background feasibility projection used for liberal products.
@@ -139,10 +146,12 @@ censoring budgets:
 * ``maximum_strict_saturation_fraction`` separately limits censored pixels
   satisfying :math:`I_\mathrm{obs}\leq I_\mathrm{fg}`.
 
-The defaults are 1% and 0.1%, respectively. BT12 is evaluated for comparison
-diagnostics but has zero weight in the liberal foreground by default. A nonzero
-``bt12_anchor_weight`` creates a documented soft anchor; it never becomes the
-conservative method's hard floor.
+The defaults are 1% and 0.1%, respectively. The raw liberal quadratic has zero
+two-sided BT12 weight by default, but the final named profile uses moderate GTL
+as a one-sided pointwise floor. Thus the samples determine every positive
+spatial enhancement while the method cannot undo mass already inferred by a
+less permissive profile. A nonzero ``bt12_anchor_weight`` adds a documented
+two-sided pull to the raw quadratic.
 
 The user chooses the saturation budgets. Scientific analyses should report
 sensitivity to both fractions and

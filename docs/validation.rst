@@ -86,9 +86,9 @@ H without manually entering ellipse parameters. ``CloudF.fits`` and
      - +2.26%
    * - Moderate
      - +9.89%
-     - +8.38%
+     - +8.39%
    * - Liberal
-     - +16.61%
+     - +16.67%
      - +25.56%
 
 Moderate GTL produces 9 strict lower limits in Cloud F and 26 in Cloud H.

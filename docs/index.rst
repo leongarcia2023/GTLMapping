@@ -8,9 +8,10 @@ trace a mass estimate back to the image, foreground, background, and opacity
 that produced it.
 
 The package offers three spatial profiles. ``conservative`` keeps BT12 as a
-pointwise foreground floor. ``moderate`` allows a broader fluctuation with
-tight censoring limits. ``liberal`` gives the local minima more influence and
-belongs in sensitivity analyses.
+pointwise foreground floor. ``moderate`` adds a quadratic enhancement above
+the conservative profile with tight censoring limits. ``liberal`` gives the
+local minima more influence while remaining above moderate GTL and belongs in
+sensitivity analyses.
 
 .. warning::
 

@@ -69,13 +69,14 @@ background.
 |---|---|---|
 | `bt12` | One value from independent saturated pixels | Published reference calculation |
 | `conservative` | A broad spatial trend with BT12 as a pointwise floor | Default spatial comparison |
-| `moderate` | A quadratic trend with a soft BT12 anchor and tight censoring limits | Intermediate sensitivity test |
-| `liberal` | A quadratic trend driven by the samples, with no hard BT12 floor | Permissive sensitivity test |
+| `moderate` | A quadratic trend ordered above conservative GTL, with tight censoring limits | Intermediate sensitivity test |
+| `liberal` | A sample-driven quadratic trend ordered above moderate GTL | Permissive sensitivity test |
 
-The conservative model cannot reduce surface density relative to BT12 when
-the image, background, opacity, and set of valid pixels are held fixed. Its
-default guardrail also prevents new strict saturation inside the fitted
-region.
+The named profiles enforce the pointwise foreground ordering
+`BT12 <= conservative <= moderate <= liberal`. With the image, background,
+opacity, and valid pixel set fixed, surface density follows the same order on
+uncensored pixels. Moderate and liberal use progressively larger censoring
+budgets and record the affected pixels in their output masks.
 
 Moderate and liberal fits can create pixels whose transmitted intensity is
 only bounded from above. Their compute helpers assign finite lower limits and

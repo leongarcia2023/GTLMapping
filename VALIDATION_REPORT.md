@@ -55,8 +55,8 @@ requires an independent pixel at the configured angular separation, takes the
 mean of the qualifying pixels, and subtracts two noise standard deviations.
 
 For Cloud C, it finds 53 pixels near the minimum and gives a foreground of
-29.3361 MJy/sr. This reference value is used by the conservative hard floor
-and by the moderate soft anchor.
+29.3361 MJy/sr. This reference value is the conservative hard floor. Moderate
+and liberal retain it indirectly through the ordered profile hierarchy.
 
 ## Spatial profile comparison
 
@@ -67,12 +67,13 @@ independent mass measurement.
 | Profile | Cloud C | Cloud F | Cloud H |
 | --- | ---: | ---: | ---: |
 | Conservative | +3.91% | +1.38% | +2.26% |
-| Moderate | +9.26% | +9.89% | +8.38% |
-| Liberal | +9.74% | +16.61% | +25.56% |
+| Moderate | +13.15% | +9.89% | +8.39% |
+| Liberal | +22.22% | +16.67% | +25.56% |
 
 The conservative profile creates no strict lower limits in any of these
-three cases. Its pointwise BT12 floor preserves the expected ordering on all
-jointly valid pixels.
+three cases. The named profiles enforce
+``BT12 <= conservative <= moderate <= liberal`` pointwise, preserving the
+expected surface-density ordering on all jointly valid, uncensored pixels.
 
 Moderate GTL produces 77, 9, and 26 strict lower limits in Clouds C, F, and H.
 Liberal GTL produces 762, 81, and 259. These pixels receive finite censored
