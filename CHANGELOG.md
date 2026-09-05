@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.5.0 - 2026-09-05
+
+september edits
+
 ## 0.4.1 - 2026-08-23
 
 - Enforce the foreground hierarchy

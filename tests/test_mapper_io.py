@@ -34,6 +34,7 @@ def test_mapper_writes_auditable_multi_extension_fits(
             "SATURATED",
             "INVALID_BG",
             "BRIGHT",
+            "UNRESOLVED",
         ]
         assert hdul[0].header["BUNIT"] == "g cm-2"
         assert hdul[0].data[0, 0] > 0

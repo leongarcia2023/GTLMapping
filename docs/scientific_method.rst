@@ -1,302 +1,213 @@
 Scientific method
-=================
+===================
 
 Radiative transfer
-------------------
+--------------------
 
-GTLMapping combines the observed intensity :math:`I_\mathrm{obs}`, foreground
-intensity :math:`I_\mathrm{fg}`, and background model outside the cloud
-:math:`I_\mathrm{bg}` as follows:
-
-.. math::
-
-   \tau = -\ln\left(
-       \frac{I_\mathrm{obs} - I_\mathrm{fg}}
-            {I_\mathrm{bg} - I_\mathrm{fg}}
-   \right),
-
-and:
+The unobscured intensity includes the foreground. With transmitted intensity
+N = I_obs - I_fg and D = I_bg - I_fg, GTLMapping computes
 
 .. math::
 
-   \Sigma = \frac{\tau}{\kappa_{\mathrm{filter}}}.
+   \tau=-\ln(N/D), \qquad \Sigma=\tau/\kappa.
 
-If you supply neither a filter nor an opacity, GTLMapping uses the
-compatibility value :math:`\kappa_{8\mu\mathrm{m}}=7.5`
-cm\ :sup:`2` g\ :sup:`-1`, following the BT09/BT12 fiducial model. It
-is a configurable reference value.
+A detected absorption signal requires D > N > 0 and enough sensitivity to
+measure N. The compatibility opacity is 7.5 cm²/g. Its mass convention must
+match the reported surface density. On jointly detected pixels,
 
-Foreground samples
-------------------
+.. math::
 
-The GTL method scans the full image with overlapping windows. The
-minimum in a window is accepted when another pixel is:
+   \frac{\partial\tau}{\partial I_\mathrm{fg}}=\frac{1}{N}-\frac{1}{D}>0.
 
-1. within two standard deviations of the instrumental noise from the minimum;
-2. inside an optional region mask supplied by the user; and
-3. at least the configured independent separation away.
+A higher foreground therefore raises optical depth. This does not establish
+that it is more accurate, and does not order stored values once a pixel
+becomes a limit.
 
-The legacy calculation uses four beam radii, or 4 arcsec for a beam with a 2
-arcsec FWHM. BT12 required independent cores to be separated by 8 arcsec. Set
-``min_separation_arcsec`` to match the dataset and include the choice in
-sensitivity tests.
+Candidate foreground sites
+----------------------------
 
-Overlapping windows may find the same coordinate repeatedly.
-GTLMapping merges those duplicates for storage and records their
-multiplicity. Kernel methods can use the multiplicity as a weight.
-Stable kriging fits the unique coordinates with a pseudoinverse.
-``kriging_duplicate_policy="repeat"`` restores the repeated rows and is
-numerically equivalent to the original calculation.
+The scan searches overlapping windows across the input image. It accepts a
+window minimum when a second eligible pixel lies within twice the noise of
+that minimum and beyond the configured angular separation. The default is
+4 arcsec for a 2 arcsec beam; the IRAC comparisons use 8 arcsec for BT12.
 
-The default scan origins preserve the legacy sample grid, leaving a few edge
-pixels outside a complete window.
-``cover_edges=True`` appends a final valid origin. The search is not
-restricted to the Simon ellipse unless ``restrict_to_cloud=True`` is
-requested.
+A separated partner does not make all sites mutually independent. A minimum
+can still contain transmitted background. Tests without opaque cores
+show the resulting bias. Repeated coordinates are merged and their
+multiplicities retained as fit weights; overlapping windows are not
+independent measurements of the same site.
 
-BT12 constant foreground
-------------------------
+The default scan leaves incomplete edge windows unused. ``cover_edges=True``
+includes a final valid origin. Use ``restrict_to_cloud=True`` or an explicit
+``region_mask`` to limit the search. Otherwise, changing the crop can change
+the samples even when the catalog ellipse stays fixed.
 
-GTLMapping implements BT12 independently of the ``flat`` summary of GTL
-samples. Inside the selected IRDC, the BT12 routine:
+Planes require three independent design columns and quadratics require six.
+Rank-deficient fits raise ``InsufficientSamplesError``. Diagnostics record
+the condition number and the numbers of sites inside and outside the fit
+region. Full rank alone does not establish adequate spatial coverage.
 
-1. finds the minimum observed intensity in the full image;
-2. labels all pixels strictly between the minimum and
-   :math:`I_\mathrm{min}+2\sigma` as saturated if at least one is
-   8 arcsec or more from the minimum;
-3. evaluates the mean of all labeled saturated pixels; and
-4. sets :math:`I_\mathrm{fg}` to that mean minus :math:`2\sigma`.
-
-Use ``fit_foreground(method="bt12")`` for the BT12 comparison. This estimator
-is separate from the legacy ``flat`` sample summary.
-
-Conservative spatial foreground
+BT12 and the spatial profiles
 -------------------------------
 
-A structured cloud can place a local minimum above the true foreground.
-Interpolating through every window minimum then copies cloud morphology into
-:math:`I_\mathrm{fg}` and removes that structure from the extinction map.
+BT12 finds the minimum inside the selected aperture. It selects pixels
+strictly between the minimum and the minimum plus twice the noise, requires
+a qualifying pixel beyond the angular separation, and subtracts twice the
+noise from their mean. This estimator is separate from a constant fit to
+GTL window minima.
 
-The ``conservative`` model assigns BT12 and the local minima different roles:
+Conservative GTL fits a plane with a soft-L1 loss, subtracts the foreground
+margin, and retains positive enhancement above BT12. It chooses the largest
+allowed blend on a 101-point grid.
 
-1. BT12 fixes the absolute foreground level.
-2. The local minima constrain a robust planar spatial candidate.
-3. The same foreground margin is subtracted from that candidate.
-4. The final model is the pointwise maximum of the spatial candidate
-   and the BT12 foreground.
-5. A blend factor is reduced until no more than the configured
-   fractions of pixels are consistent with local saturation or fall strictly
-   below the foreground.
+Moderate GTL fits a quadratic trend, clips extrapolation to the sample
+intensity range, and applies a 50% two-sided BT12 pull. Its final foreground
+retains positive enhancement above conservative GTL. Liberal GTL uses the
+same quadratic family without that two-sided pull, retaining positive
+enhancement above moderate GTL. Both reduce the enhancement to meet their
+budgets.
 
-The default limits are 1% for
-:math:`I_\mathrm{obs}\leq I_\mathrm{fg}+2\sigma` and zero new pixels
-for :math:`I_\mathrm{obs}\leq I_\mathrm{fg}`. The reference BT12
-counts are always allowed, so the regularizer cannot make an already
-saturated dataset impossible to fit. The covariance of the fitted plane
-provides an estimate of foreground uncertainty.
+.. list-table:: Default fitting budgets
+   :header-rows: 1
 
-For a fixed observed image and background with
-:math:`I_\mathrm{bg}>I_\mathrm{obs}>I_\mathrm{fg}`, optical depth is
-monotonic in foreground:
+   * - Profile
+     - Near saturation
+     - Strict saturation
+   * - Conservative
+     - 1%
+     - 0%
+   * - Moderate
+     - 0.5%
+     - 0.01%
+   * - Liberal
+     - 1%
+     - 0.1%
 
-.. math::
+Near saturation means N at or below twice the adopted noise; strict
+saturation means N at or below zero. Counts already present in the preceding
+reference are allowed. These budgets can become active fitting ceilings.
+Their achieved counts are not independent discoveries of opaque gas.
 
-   \frac{\partial\tau}{\partial I_\mathrm{fg}} =
-   \frac{1}{I_\mathrm{obs}-I_\mathrm{fg}} -
-   \frac{1}{I_\mathrm{bg}-I_\mathrm{fg}} > 0.
-
-The named profiles enforce the pointwise ordering
-
-.. math::
-
-   I_{\mathrm{fg,BT12}} \leq I_{\mathrm{fg,cons}}
-   \leq I_{\mathrm{fg,mod}} \leq I_{\mathrm{fg,lib}}.
-
-Their surface densities therefore have the same ordering on every jointly
-valid, uncensored pixel. Moderate and liberal use progressively larger,
-explicit budgets for censored lower limits; comparisons must retain those
-masks rather than treating the limits as ordinary detections.
-
-Moderate spatial foreground
----------------------------
-
-The ``moderate`` profile fits a quadratic GTL trend with a 50% two-sided BT12
-pull, then applies conservative GTL as a one-sided pointwise floor. It allows
-0.5% of pixels near saturation and caps strict censoring at 0.01%. These
-settings admit more foreground variation than the conservative fit while
-producing fewer pixels with lower limits than liberal GTL.
-
-``compute_moderate`` applies the floor on transmitted intensity and
-foreground/background feasibility projection used for liberal products.
-Strict pixels remain finite lower limits marked in ``SATURATED``; feasibility
-adjustments remain marked in ``FG_CONSTRAINT``. The moderate profile is a
-parameter preset. Include its anchor and censoring limits in sensitivity
-tests.
-
-Liberal spatial foreground
---------------------------
-
-The ``liberal`` option lets the GTL minima set the broad foreground level. It
-fits a robust quadratic surface to the accepted samples, clips extrapolation
-to their intensity range, subtracts the foreground margin, and applies two
-censoring budgets:
-
-* ``target_local_saturation_fraction`` limits pixels satisfying
-  :math:`I_\mathrm{obs}\leq I_\mathrm{fg}+2\sigma`; and
-* ``maximum_strict_saturation_fraction`` separately limits censored pixels
-  satisfying :math:`I_\mathrm{obs}\leq I_\mathrm{fg}`.
-
-The defaults are 1% and 0.1%, respectively. The raw liberal quadratic has zero
-two-sided BT12 weight by default, but the final named profile uses moderate GTL
-as a one-sided pointwise floor. Thus the samples determine every positive
-spatial enhancement while the method cannot undo mass already inferred by a
-less permissive profile. A nonzero ``bt12_anchor_weight`` adds a documented
-two-sided pull to the raw quadratic.
-
-The user chooses the saturation budgets. Scientific analyses should report
-sensitivity to both fractions and
-inspect the foreground, residual, ``SATURATED``, and ``FG_CONSTRAINT`` maps.
-The quadratic trend avoids the foreground shaped like the cloud that raw
-interpolation produced in the Sgr C test.
-
-Strictly saturated pixels do not have measured optical depths. For them,
-``compute_liberal`` substitutes a positive floor on transmitted intensity
-(default :math:`2\sigma`) and returns a finite lower limit while preserving the
-``SATURATED`` flag. Before calculating radiative transfer, it also enforces
+The foreground hierarchy is imposed:
 
 .. math::
 
-   I_\mathrm{fg} \leq I_\mathrm{bg} - I_\mathrm{trans,min},
+   I_\mathrm{fg}^{BT12}\leq I_\mathrm{fg}^{cons}
+   \leq I_\mathrm{fg}^{mod}\leq I_\mathrm{fg}^{lib}.
 
-recording every adjustment in ``FG_CONSTRAINT``. The result contains finite
-lower limits instead of NaNs created by the model. Input values that are not
-finite remain unchanged. A background below the requested floor on transmitted
-intensity raises an error because no physical projection exists.
+All named GTL profiles require a usable BT12 reference, including liberal
+GTL. They are sensitivity presets, not confidence levels. Kriging, RBF,
+splines and kernel interpolation remain available for experiments.
+Numerical stability does not establish a physical foreground.
 
-Legacy foreground interpolation
--------------------------------
+Detections and unresolved transmission
+----------------------------------------
 
-Kriging, RBF, spline, Gaussian, Cauchy, and the constant sample summary
-called ``flat`` remain available for experiments. Kriging uses unique
-coordinates and a pseudoinverse; the nearest sample fills any numerical gaps,
-which the result records. These methods interpolate the minima directly and
-are no longer the default in the main interface.
+A residual near zero cannot be treated as a measured column simply because
+a logarithm can be evaluated. GTLMapping writes separate masks:
 
-The legacy calculation used a margin of 1.0 MJy sr\ :sup:`-1`. Set
-``method="kriging"``, ``foreground_margin=1.0``,
-``clip_to_sample_range=False``, and
-``kriging_duplicate_policy="repeat"`` only when reproducing that calculation.
-A finite or numerically stable interpolation
-does not establish that the foreground is physically valid.
+* ``SATURATED`` retains the strict condition N at or below zero.
+* ``UNRESOLVED`` identifies transmission at or below the adopted threshold,
+  including positive residuals.
+* ``TRANS_LIM`` records the threshold in MJy/sr.
 
-Background models
------------------
-
-The LMF implementation approximates the published procedure by
-sampling a large trimmed median on a grid spaced by 24 arcseconds. The SMF
-implementation:
-
-1. uses a local filter one third of the Simon major axis outside the
-   cloud ellipse;
-2. excludes the cloud from those local samples; and
-3. fills the ellipse using weights proportional to inverse squared distance
-   within one semimajor axis.
-
-Earlier experiments used a sparse stencil of raw pixels that did not implement
-the published BT09 procedure. GTLMapping follows the algorithmic description
-in the paper.
-
-``estimate_box_background`` measures a background from adjacent regions:
-measure the median in each adjacent region after rejecting intensities
-above 15 MJy sr\ :sup:`-1`, then take the mean of those medians. Users supply
-the threshold and pixel boxes.
-
-Opacity by filter
------------------
-
-``get_filter_opacity`` contains filter convolved values for IRAC2, F480M,
-IRAC4, F770W, and F2100W. The table covers five OH94 and WD01 dust models. The
-reference normalization is a gas to dust ratio of 156. Since the value is per
-total mass:
+With ``saturation_policy="lower_limit"``, unresolved pixels receive
 
 .. math::
 
-   \kappa(R) = \kappa(156)\frac{156}{R}.
+   \Sigma_\mathrm{lim}=-\frac{1}{\kappa}
+   \ln\left(\frac{I_\mathrm{trans,min}}{D}\right).
 
-Thus the F480M opacity for moderately coagulated OH94 grains with thin ice
-mantles is 9.76
-cm\ :sup:`2` g\ :sup:`-1` at ratio 156 and 15.2256
-cm\ :sup:`2` g\ :sup:`-1` at ratio 100. Both values describe the same dust
-model under different total mass normalizations.
+This is a conditional sensitivity limit, not a calibrated confidence bound.
+A wrong foreground or background can invalidate its interpretation.
+``saturation_policy="mask"`` masks these pixels instead.
+Use ``result.detection_mask`` for positive detections only.
 
-Masks and negative values
--------------------------
+``GTLMapper.compute`` defaults to finite limits when sensitivity information
+is available. The threshold comes from an explicit ``detection_threshold``,
+an ``intensity_floor``, or twice the supplied ``residual_std``, observed
+uncertainty, or fit noise, in that order. ``detection_sigma`` changes the
+multiplier for standard deviations. The observed-noise default omits
+foreground uncertainty; metadata state the basis. Without noise information,
+only strict masking is possible.
 
-Pixels with :math:`I_\mathrm{obs} \le I_\mathrm{fg}` or
-:math:`I_\mathrm{bg} \le I_\mathrm{fg}` are masked by default. They
-are not silently converted to zero. ``saturation_policy="lower_limit"``
-uses an explicit positive floor on transmitted intensity for the first
-case and preserves the ``SATURATED`` mask.
+The low-level ``compute_extinction`` does not infer a noise model. Pass a
+floor or threshold for measured-column analyses. A floor also sets the
+threshold unless a different threshold is supplied. Document both if they
+differ. ``compute_moderate`` and ``compute_liberal`` project the foreground
+below the background by the floor and retain finite limits.
+``FG_CONSTRAINT`` records adjustments. Missing data and backgrounds that
+cannot support a physical inversion remain invalid.
 
-Kriging can be numerically finite while disagreeing with a separately
-estimated background. ``constrain_foreground`` enforces
+Background and source masks
+-----------------------------
+
+LMF samples a large trimmed median on a grid spaced by 24 arcsec. SMF
+measures local medians outside the cloud, with a filter one third of the
+catalog major axis, and fills the cloud using inverse-square-distance
+weights within one semimajor axis. An aligned external background can be
+supplied instead.
+
+The box estimator averages adjacent-box medians after user-specified bright
+rejection. The Sgr C example uses 15 MJy/sr. Choose boxes from the relevant
+field and retain their coordinates and masks.
+
+For observed intensity above the background, optical depth is negative.
+``bright_pixel_policy="allow"`` retains it; ``"zero"`` and ``"mask"`` are
+alternatives. This rule does not identify all point sources. Apply a
+separate source mask when the analysis requires one.
+
+Opacity and mass convention
+-----------------------------
+
+The registry contains adopted, rounded inputs for five dust prescriptions
+and five filters. It does not independently reproduce their convolutions.
+Archive the dust table, extinction-versus-absorption choice, weighting
+spectrum, throughput convention and normalization for a calibrated opacity.
+
+The registry adopts a gas-mass convention at gas/dust ratio R = 156:
 
 .. math::
 
-   I_\mathrm{fg} \le I_\mathrm{bg} - I_\mathrm{trans,min}
+   \kappa_\mathrm{gas}(R)=\kappa_\mathrm{gas}(156)\frac{156}{R},
+   \qquad
+   \kappa_\mathrm{total}(R)=\kappa_\mathrm{gas}(156)\frac{156}{R+1}.
 
-and writes an ``FG_CONSTRAINT`` mask. The projection enforces the feasible
-range for radiative transfer. The mask identifies pixels where the original
-foreground and background disagreed.
+The adopted F480M value is 9.76 at ratio 156 and 15.2256 at ratio 100 per
+gram of gas. This is not exact total-mass scaling. Use ``mass_basis="total"``
+for gas plus dust. A reference already per total mass instead rescales by
+(R0+1)/(R+1); ``FilterOpacity`` supports that explicit reference basis.
+Direct opacities must use the mass basis declared by the caller.
 
-When :math:`I_\mathrm{obs} > I_\mathrm{bg}`, the optical depth is
-negative. ``bright_pixel_policy="allow"`` keeps those values and preserves
-the treatment BT09 used to avoid bias. ``"zero"`` and ``"mask"`` provide
-other policies. None reproduces the separate BT09 cleaning rule for bright
-sources, which set only pixels above a threshold measured within half the FWHM
-to zero. Significant stellar and
-extended emission should therefore be masked upstream.
+Uncertainty
+-------------
 
-One g cm\ :sup:`-2` is approximately 4,788.45 solar masses
-pc\ :sup:`-2`.
+For a supplied foreground error and same-pixel covariance:
 
-Uncertainty propagation
------------------------
+.. code-block:: python
 
-For :math:`N=I_\mathrm{obs}-I_\mathrm{fg}` and
-:math:`D=I_\mathrm{bg}-I_\mathrm{fg}`, the derivatives to first order are:
+   from gtlmapping.extinction import transmission_std
+
+   residual_error = transmission_std(
+       observed_std, foreground_std, covariance=observed_foreground_covariance
+   )
+   result = mapper.compute(residual_std=residual_error)
+
+The helper evaluates
 
 .. math::
 
-   \frac{\partial\tau}{\partial I_\mathrm{obs}}=-\frac{1}{N},\quad
-   \frac{\partial\tau}{\partial I_\mathrm{bg}}=\frac{1}{D},\quad
-   \frac{\partial\tau}{\partial I_\mathrm{fg}}=
-   \frac{1}{N}-\frac{1}{D}.
+   \sigma_N^2=\sigma_\mathrm{obs}^2+\sigma_\mathrm{fg}^2
+       -2\,\mathrm{Cov}(I_\mathrm{obs},I_\mathrm{fg}).
 
-``propagate_uncertainty`` combines independent observed, background,
-foreground, and opacity terms. ``GTLMapper`` uses an
-attached ERR image and an available variance from the foreground model. The
-total arrays are written as ``TAU_ERR`` and ``SIGMA_ERR``.
+It does not estimate covariance from the data. Analytic ``TAU_ERR`` and
+``SIGMA_ERR`` combine independent first-order intensity and opacity terms
+and are masked on unresolved pixels. The trend variance is conditional on
+the selected sites; it omits selection uncertainty and BT12 reference error.
 
-The approximation is masked at saturated pixels and becomes unreliable
-near :math:`N=0`. For scientific inference, treat saturation as
-censoring and use Monte Carlo or a hierarchical model that can include
-foreground/background covariance. Separate opacity, gas/dust ratio,
-and background systematics from random pixel noise.
-
-Scientific scope and limits
----------------------------
-
-The package implements a parameterized MIREX calculation for one band and a
-registry of filter convolved opacity values. It does not yet
-convolve arbitrary throughput curves with raw dust tables or infer a spatially
-varying extinction law. NIR/MIR merging, covariance models, and censored Monte
-Carlo inference also remain outside the current release. The compatibility default
-:math:`\kappa_{8\mu\mathrm{m}}=7.5` cm\ :sup:`2` g\ :sup:`-1` has an
-estimated absolute systematic uncertainty of about 30 percent in the
-BT09/BT12/KT13 lineage.
-
-For filters outside the registry, users must supply an appropriate
-opacity and noise estimate and verify that emission from cold clouds is
-negligible. Independent submillimeter calibration and automated
-masks for point sources remain future work.
+Integrated inference must preserve shared systematics and spatial noise
+correlation. Draw background and opacity parameters jointly per realization,
+repeat sample selection and foreground fitting, and separate detected mass
+from unresolved contributions. The package does not claim calibrated
+censored posterior intervals. Validation reports sensitivity and recovery
+errors, not a pixel-noise error bar on a cloud mass.

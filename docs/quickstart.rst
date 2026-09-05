@@ -42,8 +42,10 @@ named extensions:
    * - ``FOREGROUND`` / ``BACKGROUND``
      - The intensity surfaces used in the transfer equation
    * - ``SATURATED`` / ``INVALID_BG`` / ``BRIGHT``
-     - Masks for censoring, conflicts between model inputs, and negative
+     - Masks for nonpositive transmission, invalid backgrounds, and negative
        optical depth
+   * - ``UNRESOLVED`` / ``TRANS_LIM``
+     - Full sensitivity mask and the adopted transmission threshold
    * - ``SIGMA_ERR`` / ``TAU_ERR``
      - Uncertainty propagated to first order, when the calculation has
        uncertainty inputs
@@ -84,7 +86,7 @@ profiles:
      - Behavior
      - Use
    * - ``bt12``
-     - One foreground value from independent saturated pixels
+     - One foreground value from minima passing a partner-separation test
      - Reference calculation
    * - ``conservative``
      - Broad spatial trend with a pointwise BT12 floor
@@ -133,8 +135,11 @@ Liberal GTL gives the accepted minima more influence. Its default budgets are
    )
 
 ``compute_moderate`` and ``compute_liberal`` use a positive floor on
-transmitted intensity for censored pixels. The returned values are lower
-limits, and the ``SATURATED`` extension preserves their status.
+transmitted intensity for censored pixels. The same default applies to ``compute`` when a threshold can be inferred.
+Use ``UNRESOLVED`` to identify all limits, including weak positive residuals;
+``SATURATED`` records only nonpositive residuals. ``result.detection_mask``
+selects positive, resolved columns. These finite values are conditional
+sensitivity scales, not calibrated confidence bounds.
 
 Use BT12 for the published comparison:
 
@@ -180,7 +185,9 @@ JWST F480M with an ERR image
 ----------------------------
 
 JWST products often store the science image and calibrated uncertainty in
-separate extensions:
+separate extensions. In this fragment, supply your field's ``target_mask``,
+``adjacent_pixel_boxes`` and ``background_uncertainty``. A complete runnable
+case is provided in :doc:`jwst_sgrc`.
 
 .. code-block:: python
 
@@ -213,7 +220,8 @@ separate extensions:
 
 The opacity registry returns 9.76 cm\ :sup:`2` g\ :sup:`-1` at gas-to-dust
 ratio 156 and 15.2256 cm\ :sup:`2` g\ :sup:`-1` at ratio 100. Include the
-normalization in reported results.
+gas-mass normalization in reported results. These rounded opacities are
+adopted inputs, not independently reproduced filter convolutions.
 
 Handle conflicts between model surfaces
 ---------------------------------------
@@ -234,6 +242,7 @@ intensity is justified, record the projection in the output:
        intensity_floor=2 * noise_sigma,
    )
 
-``FG_CONSTRAINT`` identifies adjusted foreground pixels. ``SATURATED`` marks
-censored lower limits on surface density. Exclude those pixels from ordinary
-Gaussian fits.
+``FG_CONSTRAINT`` identifies adjusted foreground pixels. ``UNRESOLVED``
+marks all sensitivity limits, including weak positive transmission;
+``SATURATED`` marks only strict zero crossings. Exclude unresolved pixels
+from ordinary Gaussian fits.

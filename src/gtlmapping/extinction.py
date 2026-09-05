@@ -11,6 +11,34 @@ SOLAR_MASS_G = 1.988409870698051e33
 G_PER_CM2_TO_MSUN_PER_PC2 = PARSEC_CM**2 / SOLAR_MASS_G
 
 
+def unresolved_transmission(observed, foreground, threshold=None) -> np.ndarray:
+    """Flag nonpositive or weak transmission; this is not an opacity test.
+
+    A threshold uses the intensity unit of the inputs. Without one, only
+    nonpositive transmission is identified. Missing threshold pixels remain
+    unresolved rather than becoming detections.
+    """
+    obs, fg = np.broadcast_arrays(np.asarray(observed, float), np.asarray(foreground, float))
+    finite = np.isfinite(obs) & np.isfinite(fg)
+    if threshold is None:
+        return finite & (obs <= fg)
+    limit = np.broadcast_to(np.asarray(threshold, float), obs.shape)
+    if np.any(np.isfinite(limit) & (limit <= 0)) or np.any(np.isinf(limit)):
+        raise ValueError("The detection threshold must be positive; NaN denotes missing sensitivity.")
+    return finite & ((obs - fg <= limit) | ~np.isfinite(limit))
+
+
+def transmission_std(observed_std, foreground_std=0.0, covariance=0.0):
+    """Standard deviation of I_obs-I_fg with supplied same-pixel covariance."""
+    obs, fg, cov = np.broadcast_arrays(np.asarray(observed_std, float),
+                                      np.asarray(foreground_std, float), np.asarray(covariance, float))
+    if np.any(obs < 0) or np.any(fg < 0):
+        raise ValueError("Standard deviations must be nonnegative.")
+    if np.any(np.abs(cov) > obs * fg + 1e-12):
+        raise ValueError("Covariance exceeds the product of the standard deviations.")
+    return np.sqrt(np.maximum(obs**2 + fg**2 - 2*cov, 0.0))
+
+
 def convert_surface_density(
     surface_density: np.ndarray | np.ma.MaskedArray,
     *,
@@ -33,6 +61,7 @@ def compute_extinction(
     bright_pixel_policy: str = "allow",
     saturation_policy: str = "mask",
     intensity_floor: float | np.ndarray | None = None,
+    detection_threshold: float | np.ndarray | None = None,
 ) -> tuple[
     np.ma.MaskedArray,
     np.ma.MaskedArray,
@@ -50,7 +79,10 @@ def compute_extinction(
     ``I_obs <= I_fg`` are masked by default. With
     ``saturation_policy='lower_limit'``, an explicitly supplied positive
     ``intensity_floor`` replaces their transmitted intensity and their
-    values become lower limits marked by the returned saturated mask.
+    values become conditional limits. The floor also sets the detection
+    threshold unless detection_threshold is supplied. The returned saturated
+    mask retains the strict zero-crossing test; unresolved_transmission gives
+    the full limit mask, including weak positive transmission.
     ``bright_pixel_policy='allow'`` retains negative optical depths,
     matching BT09's bias-avoidance treatment.
     """
@@ -71,9 +103,11 @@ def compute_extinction(
     denominator = bg - fg
     finite = np.isfinite(obs) & np.isfinite(bg) & np.isfinite(fg)
     saturated = finite & (numerator <= 0)
+    selected_threshold = intensity_floor if detection_threshold is None else detection_threshold
+    unresolved = unresolved_transmission(obs, fg, selected_threshold)
     invalid_background = finite & (denominator <= 0)
-    valid = finite & ~saturated & ~invalid_background
-    effective_numerator = numerator.copy()
+    valid = finite & ~unresolved & ~invalid_background
+    effective_numerator = np.array(numerator, dtype=float, copy=True)
 
     if saturation_policy == "lower_limit":
         if intensity_floor is None:
@@ -81,9 +115,11 @@ def compute_extinction(
                 "intensity_floor is required when saturation_policy='lower_limit'."
             )
         floor = np.broadcast_to(np.asarray(intensity_floor, dtype=float), obs.shape)
-        if np.any(~np.isfinite(floor) | (floor <= 0)):
-            raise ValueError("intensity_floor must be positive and finite.")
-        lower_limit = saturated & ~invalid_background & (floor <= denominator)
+        if np.any(np.isfinite(floor) & (floor <= 0)) or np.any(np.isinf(floor)):
+            raise ValueError("intensity_floor must be positive; NaN denotes missing sensitivity.")
+        lower_limit = unresolved & finite & ~invalid_background & (floor <= denominator)
+        if selected_threshold is not None:
+            lower_limit &= np.isfinite(np.broadcast_to(selected_threshold, obs.shape))
         effective_numerator[lower_limit] = floor[lower_limit]
         valid |= lower_limit
 

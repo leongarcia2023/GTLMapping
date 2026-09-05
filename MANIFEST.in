@@ -6,6 +6,7 @@ include RELEASE_CHECKLIST.md
 include VALIDATION_REPORT.md
 include .readthedocs.yaml
 recursive-include docs *.py *.rst
-recursive-include docs/_static *.png
-recursive-include examples *.py
+recursive-include docs/_static *.png *.json *.csv
+recursive-include examples *.py *.mplstyle
+recursive-include examples/fonts *.ttf *.txt
 recursive-include tests *.py

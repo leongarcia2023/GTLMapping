@@ -70,6 +70,8 @@ def _parser() -> argparse.ArgumentParser:
         choices=["IRAC2", "F480M", "IRAC4", "F770W", "F2100W"],
     )
     parser.add_argument("--gas-to-dust-ratio", type=float, default=156.0)
+    parser.add_argument("--mass-basis", choices=["gas", "total"], default="gas")
+    parser.add_argument("--detection-threshold", type=float, help="Transmission sensitivity in MJy/sr")
     parser.add_argument("--kappa-std", type=float, default=0.0)
     parser.add_argument(
         "--bright-pixel-policy",
@@ -80,7 +82,7 @@ def _parser() -> argparse.ArgumentParser:
         "--saturation-policy",
         choices=["mask", "lower_limit"],
         default=None,
-        help="Defaults to lower_limit for moderate/liberal and mask otherwise",
+        help="Defaults to finite conditional limits for all profiles with a noise estimate",
     )
     parser.add_argument("--intensity-floor", type=float)
     parser.add_argument(
@@ -195,16 +197,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     saturation_policy = args.saturation_policy
     if saturation_policy is None:
-        saturation_policy = (
-            "lower_limit"
-            if args.foreground_method in {"moderate", "liberal"}
-            else "mask"
-        )
+        saturation_policy = "lower_limit"
     intensity_floor = args.intensity_floor
-    if (
-        args.foreground_method in {"moderate", "liberal"}
-        and intensity_floor is None
-    ):
+    if intensity_floor is None:
         intensity_floor = 2.0 * args.noise_sigma
     if args.foreground_method in {"moderate", "liberal"}:
         mapper.constrain_foreground(
@@ -231,6 +226,8 @@ def main(argv: list[str] | None = None) -> int:
         kappa_cm2_g=args.kappa,
         filter_name=args.filter,
         gas_to_dust_ratio=args.gas_to_dust_ratio,
+        mass_basis=args.mass_basis,
+        detection_threshold=args.detection_threshold,
         kappa_std_cm2_g=args.kappa_std,
         bright_pixel_policy=args.bright_pixel_policy,
         saturation_policy=saturation_policy,

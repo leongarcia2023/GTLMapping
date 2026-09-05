@@ -18,6 +18,8 @@ from .extinction import (
     compute_extinction,
     convert_surface_density,
     propagate_uncertainty,
+    transmission_std,
+    unresolved_transmission,
 )
 from .foreground import (
     cross_validate_foreground,
@@ -71,6 +73,8 @@ __all__ = [
     "measure_box_background",
     "propagate_uncertainty",
     "read_simon_catalog",
+    "transmission_std",
+    "unresolved_transmission",
 ]
 
-__version__ = "0.4.1"
+__version__ = "0.5.0"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 
 
 @dataclass(frozen=True, slots=True)
@@ -14,18 +15,21 @@ class FilterOpacity:
     dust_model: str
     kappa_reference_cm2_g: float
     reference_gas_to_dust_ratio: float = 156.0
+    reference_mass_basis: str = "gas"
 
-    def at_gas_to_dust_ratio(self, gas_to_dust_ratio: float) -> float:
-        """Return opacity per total mass for another gas-to-dust ratio."""
+    def at_gas_to_dust_ratio(self, gas_to_dust_ratio: float, *, mass_basis: str = "gas") -> float:
+        """Rescale via opacity per dust mass, keeping the mass basis explicit."""
 
         ratio = float(gas_to_dust_ratio)
-        if ratio <= 0:
+        if ratio <= 0 or not isfinite(ratio):
             raise ValueError("gas_to_dust_ratio must be positive.")
-        return (
-            self.kappa_reference_cm2_g
-            * self.reference_gas_to_dust_ratio
-            / ratio
-        )
+        if mass_basis not in {"gas", "total"} or self.reference_mass_basis not in {"gas", "total"}:
+            raise ValueError("mass_basis must be 'gas' or 'total'.")
+        reference = float(self.reference_gas_to_dust_ratio)
+        if reference <= 0 or not isfinite(reference) or self.kappa_reference_cm2_g <= 0 or not isfinite(self.kappa_reference_cm2_g):
+            raise ValueError("Reference ratio and opacity must be positive and finite.")
+        dust_opacity = self.kappa_reference_cm2_g * (reference + (self.reference_mass_basis == "total"))
+        return dust_opacity / (ratio + (mass_basis == "total"))
 
 
 _FILTER_ALIASES = {
@@ -56,7 +60,8 @@ _WAVELENGTHS_UM = {
 }
 
 # Filter convolved OH94 and WD01 values used by the included benchmarks.
-# Every row is normalized to gas to dust ratio 156.
+# The compatibility table adopts gas-mass normalization at gas/dust ratio 156.
+# These rounded inputs are not a substitute for archived filter convolutions.
 _REFERENCE_OPACITIES = {
     "wd01_rv31": {
         "IRAC2": 6.67,
@@ -138,12 +143,15 @@ def get_filter_opacity(
     *,
     dust_model: str = "oh94_thin_ice_coagulated",
     gas_to_dust_ratio: float = 156.0,
+    mass_basis: str = "gas",
 ) -> float:
-    """Return a filter-convolved opacity in cm² g⁻¹ of total mass.
+    """Return an adopted filter opacity in cm² g⁻¹ of gas or total mass.
 
-    The tabulated values use a gas-to-dust ratio of 156. Opacity per total
-    mass scales inversely with the requested ratio, so the supplied F480M
-    value is 9.76 cm² g⁻¹ at 156 and 15.2256 cm² g⁻¹ at 100.
+    The compatibility table adopts the gas-mass convention at gas/dust=156.
+    F480M is 9.76 at 156 and 15.2256 at 100 per gas mass. For total mass,
+    divide the same dust opacity by R+1, not R. This explicit convention
+    preserves the supplied table; its rounded values are adopted inputs,
+    not independent reproductions of the underlying filter convolutions.
     """
 
     filter_key = _canonical_filter(filter_name)
@@ -154,13 +162,14 @@ def get_filter_opacity(
         dust_model=model_key,
         kappa_reference_cm2_g=_REFERENCE_OPACITIES[model_key][filter_key],
     )
-    return record.at_gas_to_dust_ratio(gas_to_dust_ratio)
+    return record.at_gas_to_dust_ratio(gas_to_dust_ratio, mass_basis=mass_basis)
 
 
 def list_filter_opacities(
     *,
     dust_model: str = "oh94_thin_ice_coagulated",
     gas_to_dust_ratio: float = 156.0,
+    mass_basis: str = "gas",
 ) -> dict[str, float]:
     """Return all supported filter opacities for one model and normalization."""
 
@@ -170,6 +179,7 @@ def list_filter_opacities(
             filter_name,
             dust_model=model_key,
             gas_to_dust_ratio=gas_to_dust_ratio,
+            mass_basis=mass_basis,
         )
         for filter_name in _WAVELENGTHS_UM
     }

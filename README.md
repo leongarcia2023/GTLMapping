@@ -9,7 +9,7 @@ clouds. It includes the constant foreground method of Butler & Tan (2012)
 and three spatial models for testing how foreground structure changes the
 inferred column density.
 
-Every calculation remains inspectable. The package writes the foreground,
+The package writes the foreground,
 background, optical depth, surface density, uncertainty, and diagnostic masks
 to separate extensions in one FITS file. WCS checks catch misaligned images
 before they enter the radiative transfer calculation.
@@ -67,7 +67,7 @@ background.
 
 | Method | Foreground treatment | Best use |
 |---|---|---|
-| `bt12` | One value from independent saturated pixels | Published reference calculation |
+| `bt12` | One value from minima passing a partner-separation test | Published reference calculation |
 | `conservative` | A broad spatial trend with BT12 as a pointwise floor | Default spatial comparison |
 | `moderate` | A quadratic trend ordered above conservative GTL, with tight censoring limits | Intermediate sensitivity test |
 | `liberal` | A sample-driven quadratic trend ordered above moderate GTL | Permissive sensitivity test |
@@ -78,10 +78,14 @@ opacity, and valid pixel set fixed, surface density follows the same order on
 uncensored pixels. Moderate and liberal use progressively larger censoring
 budgets and record the affected pixels in their output masks.
 
-Moderate and liberal fits can create pixels whose transmitted intensity is
-only bounded from above. Their compute helpers assign finite lower limits and
-keep those pixels marked in the `SATURATED` extension. Treat the marks as
-censored measurements.
+A transmission threshold separates detections from weak or nonpositive
+residuals in all profiles. By default, `compute` uses twice the supplied image
+noise when no explicit sensitivity is given. `UNRESOLVED` flags the full set;
+`SATURATED` records only nonpositive transmission. Finite values assigned to
+unresolved pixels are conditional sensitivity limits, not measured columns
+or calibrated confidence bounds. They are excluded from ordinary uncertainty
+maps. A finite-map sum need not preserve the foreground ordering when pixels
+cross the sensitivity threshold.
 
 ```python
 mapper.detect_foreground(noise_sigma=0.6)
@@ -115,17 +119,16 @@ mapper = GTLMapper.from_fits(
     uncertainty_hdu="ERR",
 )
 
-result = mapper.compute(
-    filter_name="F480M",
-    gas_to_dust_ratio=156,
-    kappa_std_cm2_g=0.30 * 9.76,
-)
 ```
 
-The included OH94 opacity for moderately coagulated grains with thin ice
-mantles is 9.76 cm2/g
-at gas-to-dust ratio 156. The same filter convolution gives 15.2256 cm2/g
-at ratio 100. Record the normalization with every result.
+Fit a foreground and set an aligned background before calling `compute`.
+The complete Sgr C example below supplies both.
+
+The F480M benchmark adopts 9.76 cm2/g per unit gas mass at gas-to-dust
+ratio 156. Rescaling that input gives 15.2256 cm2/g per gas mass at ratio 100.
+This is an adopted convention; the original filter convolution has not been
+independently reproduced here. Pass `mass_basis="total"` for gas-plus-dust
+mass. Record the opacity, ratio and mass basis with each result.
 
 If a foreground estimate reaches the background outside the cloud, inspect
 both surfaces. You can then impose a positive floor on transmitted intensity
@@ -146,9 +149,15 @@ result = mapper.compute(
 
 The controlled Sgr C case uses one background and mask policy for both BT12
 and conservative GTL. In the 123 by 123 pixel test region, the BT12 mass is
-30.35 solar masses and the conservative GTL mass is 31.24 solar masses. The
-filament remains visible, and the spatial model creates no new strict
-saturation holes.
+30.30 solar masses and the conservative GTL mass is 31.10 solar masses at
+the same transmission threshold. These sums include finite sensitivity
+values for 55 and 117 unresolved pixels, respectively. Neither map contains
+nonpositive transmission.
+
+A synthetic suite attempts 880 fits across 220 images with known inputs.
+Spatial models reduce bias in successful gradient cases, but can overestimate
+columns when minima are not opaque. Failures are included in the
+[validation records](docs/validation.rst).
 
 Run the case study with:
 

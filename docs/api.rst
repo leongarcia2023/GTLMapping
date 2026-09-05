@@ -49,6 +49,10 @@ Extinction and units
 
 .. autofunction:: gtlmapping.propagate_uncertainty
 
+.. autofunction:: gtlmapping.transmission_std
+
+.. autofunction:: gtlmapping.unresolved_transmission
+
 .. autofunction:: gtlmapping.convert_surface_density
 
 Opacity

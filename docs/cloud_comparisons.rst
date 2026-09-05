@@ -1,77 +1,56 @@
 Cloud comparisons
 =================
 
-Clouds C, F, and H provide three independent checks of the same mapping
-interface. The package reads each cloud ellipse from ``catalog.dat``, detects
-foreground samples across the full image, and applies BT12 and the three GTL
-profiles without changing the catalog geometry by hand.
+Clouds C, F and H use the same catalog interface and presets. Within each
+cloud, the image, background, aperture, opacity and intensity threshold stay
+fixed across profiles. These are IRAC4 comparisons; Cloud H here is not the
+JWST/MIRI field.
 
-How to read the figures
------------------------
-
-Each figure follows the calculation from input image to surface density:
-
-1. Observed intensity shows the 8 micron image. The white curve is the
-   Simon catalog ellipse. Cyan circles mark accepted foreground sample sites
-   in the displayed crop; the legend also gives the total detected in the
-   full image.
-2. Foreground change shows the moderate spatial foreground minus the BT12
-   constant. Positive values show where the moderate profile raises the
-   foreground; the ordered profile cannot fall below BT12.
-3. BT12 surface density uses the constant BT12 foreground.
-4. Moderate GTL surface density uses the spatial foreground. Hollow
-   magenta circles identify finite censored lower limits. They are not NaNs
-   and should not be treated as ordinary detections.
-
-The two surface density panels share a color scale within each cloud. Their
-maps and comparison sums are restricted to the catalog ellipse. Cloud C uses
-its prepared SMF background; Clouds F and H use the SMF estimator included in
-GTLMapping. Within each cloud, all foreground profiles use the same image,
-background, opacity, aperture, and bright pixel policy.
+The figures show intensity, the moderate-minus-BT12 foreground, and the two
+surface-density maps. Saffron crosses mark unresolved transmission. Those
+finite values are sensitivity limits, excluded from detection-only PDFs.
 
 Cloud C
 -------
 
-Cloud C has 29 unique sample sites. Moderate GTL keeps the dense cloud
-structure visible while replacing the constant foreground with a broad
-spatial surface. Relative to BT12, the conservative, moderate, and liberal
-sums increase by 3.91%, 13.15%, and 22.22%. Moderate GTL contains 77 censored
-lower limits; liberal GTL contains 762.
+The scan yields 29 sites, all inside the aperture. The cutout truncates the
+catalog ellipse, so the comparison uses the ellipse-image overlap.
+Cloud C uses its prepared SMF background. Both supplied files lack a BUNIT
+keyword; this comparison adopts MJy/sr, which must be verified against the
+parent mosaic for an absolute calibration.
 
 .. image:: _static/cloud_c_method.png
-   :alt: Cloud C observed intensity, moderate foreground change, BT12 surface density, and moderate GTL surface density
+   :alt: Cloud C intensity, foreground change, BT12 and moderate surface densities
    :width: 100%
 
 Cloud F
 -------
 
-Cloud F has 53 unique sample sites. The moderate foreground changes smoothly
-along the long axis of the cloud without copying its filamentary structure.
-The conservative, moderate, and liberal sums increase by 1.38%, 9.89%, and
-16.67%. Moderate GTL contains 9 censored lower limits; liberal GTL contains
-81.
+The scan yields 53 sites, of which four lie inside the cloud aperture.
+An aperture-restricted scan leaves three sites and cannot support a general
+quadratic. The foreground depends on sites beyond the summed region.
 
 .. image:: _static/cloud_f_method.png
-   :alt: Cloud F observed intensity, moderate foreground change, BT12 surface density, and moderate GTL surface density
+   :alt: Cloud F intensity, foreground change, BT12 and moderate surface densities
    :width: 100%
 
 Cloud H
 -------
 
-Cloud H has 36 unique sample sites. Its moderate foreground has a stronger
-gradient than Cloud F, while the bright filament remains distinct in the
-surface density map. The conservative, moderate, and liberal sums increase by
-2.26%, 8.39%, and 25.56%. Moderate GTL contains 26 censored lower limits;
-liberal GTL contains 259.
+The scan yields 36 sites, including 16 inside the aperture. Clouds F and H
+use the package SMF estimator and their complete catalog ellipses.
 
 .. image:: _static/cloud_h_method.png
-   :alt: Cloud H observed intensity, moderate foreground change, BT12 surface density, and moderate GTL surface density
+   :alt: Cloud H intensity, foreground change, BT12 and moderate surface densities
    :width: 100%
 
-Profile comparison
-------------------
+Integrated comparison
+---------------------
 
-.. list-table:: Change in summed nonnegative surface density relative to BT12
+All profiles use a threshold of 1.2 MJy/sr, twice the adopted image noise of
+0.6 MJy/sr. Finite sensitivity limits are included in each nonnegative sum.
+
+.. list-table:: Change relative to BT12
    :header-rows: 1
 
    * - Profile
@@ -79,25 +58,77 @@ Profile comparison
      - Cloud F
      - Cloud H
    * - Conservative
-     - +3.91%
-     - +1.38%
-     - +2.26%
+     - +3.90%
+     - +1.37%
+     - +2.22%
    * - Moderate
-     - +13.15% (77 lower limits)
-     - +9.89% (9 lower limits)
-     - +8.39% (26 lower limits)
+     - +13.10%
+     - +9.63%
+     - +8.20%
    * - Liberal
-     - +22.22% (762 lower limits)
-     - +16.67% (81 lower limits)
-     - +25.56% (259 lower limits)
+     - +22.10%
+     - +15.61%
+     - +24.97%
 
-These sums compare numerical behavior under fixed inputs. They are not
-independent mass measurements, and a larger number of censored pixels does
-not by itself make a foreground model more physical. A scientific analysis
-should compare the foreground surface with independent column density data
-and vary the anchor and censoring limits.
+.. list-table:: Unresolved pixels (strict zero-crossing counts in parentheses)
+   :header-rows: 1
 
-The figures can be regenerated with
-``examples/cloud_profile_comparisons.py``. The exact counts and foreground
-ranges are available in the :download:`machine readable summary
-<_static/cloud_method_summary.json>`.
+   * - Profile
+     - Cloud C
+     - Cloud F
+     - Cloud H
+   * - BT12
+     - 22 (0)
+     - 15 (0)
+     - 25 (0)
+   * - Conservative
+     - 68 (0)
+     - 20 (0)
+     - 54 (0)
+   * - Moderate
+     - 243 (77)
+     - 268 (9)
+     - 112 (26)
+   * - Liberal
+     - 1186 (762)
+     - 833 (81)
+     - 616 (259)
+
+Five of six moderate/liberal strict counts reach their ceiling. Liberal
+Cloud F reaches its near-saturation ceiling instead. These counts describe
+active fitting constraints, not independent discoveries of opaque gas.
+The foreground order is imposed; larger sums alone cannot establish more
+accurate masses. See :doc:`validation` for recovery tests and failures.
+
+The :download:`input manifest <_static/input_manifest.json>` records input
+hashes, extensions, units and dependency versions. Raw data and preprocessing
+recipes still require an author-verified archive.
+
+The :download:`comparison data <_static/cloud_method_summary.json>` include
+detected-only sums, finite-limit contributions and fit diagnostics.
+
+Surface-density distributions
+-----------------------------
+
+Each cloud uses the same pixels across profiles: finite, non-bright,
+resolved, and above 0.01 g/cm² in every profile. A further cut requires
+transmission above 1.8 MJy/sr in every profile. This is three times the
+adopted image noise; it omits foreground uncertainty and does not establish
+completeness.
+
+.. image:: _static/sigma_pdfs.png
+   :alt: Area-weighted and mass-weighted distributions on common resolved samples
+   :width: 100%
+
+The fraction of mapped mass above 0.2 g/cm² changes from 19.75% to 21.95%
+in C, 8.32% to 21.21% in F, and 3.02% to 8.21% in H between BT12 and liberal
+GTL. The enhancement persists after removing weak transmission. These
+conditional distributions do not establish a global lognormal or power-law
+tail.
+
+The :download:`distribution data <_static/sigma_pdf_profiles.csv>` retain
+bin edges and normalization. Sensitivity records vary the
+:download:`residual cut <_static/pdf_threshold_sensitivity.json>`,
+:download:`stored threshold <_static/threshold_sensitivity.json>`,
+:download:`Cloud F sample support <_static/sample_sensitivity_f.json>` and
+:download:`Cloud F budgets <_static/budget_sensitivity_f.json>`.

@@ -348,6 +348,7 @@ def fit_conservative_foreground(
         )
     )
     weights = np.sqrt(samples.multiplicity.astype(float))
+    support = _trend_support(sample_design, samples, eligible)
     initial = np.array(
         [float(np.median(samples.values)), 0.0, 0.0],
         dtype=float,
@@ -453,6 +454,9 @@ def fit_conservative_foreground(
         variance=variance,
         diagnostics={
             "reference_method": "bt12",
+            "noise_sigma": float(noise_sigma),
+            "recommended_intensity_floor": 2.0 * float(noise_sigma),
+            **support,
             "reference_foreground": float(reference_values[eligible][0]),
             "reference_saturated_pixel_count": reference.diagnostics[
                 "saturated_pixel_count"
@@ -614,6 +618,7 @@ def fit_liberal_foreground(
         return np.column_stack(columns)
 
     sample_design = design_matrix(samples.cols, samples.rows)
+    support = _trend_support(sample_design, samples, eligible)
     weights = np.sqrt(samples.multiplicity.astype(float))
     initial = np.zeros(sample_design.shape[1], dtype=float)
     initial[0] = float(np.median(samples.values))
@@ -854,6 +859,8 @@ def fit_liberal_foreground(
         variance=np.maximum(trend_variance, 0.0),
         diagnostics={
             "reference_method": "bt12_diagnostic_only",
+            "noise_sigma": float(noise_sigma),
+            **support,
             "reference_available": reference is not None,
             "reference_foreground": reference_foreground,
             "reference_saturated_pixel_count": reference_saturated_count,
@@ -1001,6 +1008,20 @@ def fit_moderate_foreground(
         constraint_mask=result.constraint_mask,
         diagnostics=diagnostics,
     )
+
+
+def _trend_support(design, samples, eligible):
+    rank = int(np.linalg.matrix_rank(design))
+    required = design.shape[1]
+    if rank < required:
+        raise InsufficientSamplesError(
+            f"Foreground trend needs design rank {required}; received {rank} "
+            f"from {len(samples)} unique sites. Select more spatially distributed sites."
+        )
+    inside = int(np.count_nonzero(eligible[samples.rows, samples.cols]))
+    return {"design_rank": rank, "design_condition_number": float(np.linalg.cond(design)),
+            "samples_inside_fit_region": inside, "samples_outside_fit_region": len(samples)-inside,
+            "variance_scope": "conditional_fit_only_excludes_selection_and_reference_error"}
 
 
 def _validate_samples(samples: ForegroundSamples, method: str) -> None:

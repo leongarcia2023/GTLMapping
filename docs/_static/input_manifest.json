@@ -1,0 +1,246 @@
+{
+  "package_version": "0.5.0",
+  "python": "3.12.4",
+  "dependencies": {
+    "numpy": "1.26.4",
+    "scipy": "1.14.1",
+    "astropy": "6.1.7",
+    "matplotlib": "3.9.4",
+    "pykrige": "1.7.2"
+  },
+  "inputs": [
+    {
+      "name": "catalog.dat",
+      "bytes": 1730465,
+      "sha256": "ef099d67814330be20df317f92abcbeed2c16cf31c62962e31c7500fa0a73b1f"
+    },
+    {
+      "name": "1kx1k.fits",
+      "bytes": 6744960,
+      "sha256": "0dfc60da0c15d11301da9cd7960c3c9b86b501e7766939e874f6bc50091527d2",
+      "extensions": [
+        {
+          "index": 0,
+          "name": "PRIMARY",
+          "shape": [
+            918,
+            918
+          ],
+          "BUNIT": null,
+          "FILTER": null,
+          "PROGRAM": null
+        }
+      ]
+    },
+    {
+      "name": "SMFbg1.fits",
+      "bytes": 6744960,
+      "sha256": "3accb10e954f3bd8f5cd60b30b0284b8a8425627232864c88db80386f8980629",
+      "extensions": [
+        {
+          "index": 0,
+          "name": "PRIMARY",
+          "shape": [
+            918,
+            918
+          ],
+          "BUNIT": null,
+          "FILTER": null,
+          "PROGRAM": null
+        }
+      ]
+    },
+    {
+      "name": "CloudF.fits",
+      "bytes": 34113600,
+      "sha256": "16fa29b62fc244d73c31a151e0750503a37824564750b6a826fee3f7b2962aeb",
+      "extensions": [
+        {
+          "index": 0,
+          "name": "PRIMARY",
+          "shape": [
+            2030,
+            2100
+          ],
+          "BUNIT": "MJy/sr",
+          "FILTER": null,
+          "PROGRAM": null
+        }
+      ]
+    },
+    {
+      "name": "IRDCCloudH.fits",
+      "bytes": 8838720,
+      "sha256": "64dba662abd85868ac880045be7b11e1aaeeb14214774570e90aa67442929ccb",
+      "extensions": [
+        {
+          "index": 0,
+          "name": "PRIMARY",
+          "shape": [
+            1051,
+            1050
+          ],
+          "BUNIT": "MJy/sr",
+          "FILTER": null,
+          "PROGRAM": null
+        }
+      ]
+    },
+    {
+      "name": "F480M_registered.fits",
+      "bytes": 104189760,
+      "sha256": "969b9099727dcd6deb854c97918e5c21491c7314c1025db7248876db586baacf",
+      "extensions": [
+        {
+          "index": 0,
+          "name": "PRIMARY",
+          "shape": [],
+          "BUNIT": null,
+          "FILTER": "F480M",
+          "PROGRAM": "04147"
+        },
+        {
+          "index": 1,
+          "name": "SCI",
+          "shape": [
+            5660,
+            2300
+          ],
+          "BUNIT": "MJy/sr",
+          "FILTER": null,
+          "PROGRAM": null
+        },
+        {
+          "index": 2,
+          "name": "ERR",
+          "shape": [
+            5660,
+            2300
+          ],
+          "BUNIT": "MJy/sr",
+          "FILTER": null,
+          "PROGRAM": null
+        }
+      ]
+    }
+  ],
+  "package_sources": [
+    {
+      "name": "__init__.py",
+      "bytes": 2009,
+      "sha256": "d5de24e9c500f6831af1101c65d60b19a8e90a6bc41ac3dcbeddd8aae44533fa"
+    },
+    {
+      "name": "background.py",
+      "bytes": 10850,
+      "sha256": "6c22ce5d88f2d686679639fa7dc68c3bfb21ac9bce0d0061e028fba5f7a5e40c"
+    },
+    {
+      "name": "catalog.py",
+      "bytes": 3043,
+      "sha256": "8a45c87b96ed56a6ae504ad4b919658a551ba9f27cb03801c173636a5f439892"
+    },
+    {
+      "name": "cli.py",
+      "bytes": 8628,
+      "sha256": "4d35457c594a264559a0fda25f393951b533b27bc102874f9014445ba1ca65cf"
+    },
+    {
+      "name": "exceptions.py",
+      "bytes": 446,
+      "sha256": "ced0daaa77659d041fe981f96a6371b946e34049650eca75ab101da45b849982"
+    },
+    {
+      "name": "extinction.py",
+      "bytes": 10264,
+      "sha256": "a3c014db80a759db375b47ecd502389f34a3da4ae15d50173cf35c5820ae9f4b"
+    },
+    {
+      "name": "foreground.py",
+      "bytes": 50578,
+      "sha256": "45107396d02bfa5ece87e501004df30a02bfadc4c911689e3eecc4ac81481fc2"
+    },
+    {
+      "name": "geometry.py",
+      "bytes": 3702,
+      "sha256": "370abcd0689b7b5df7362d4a7fafe4b21c7340ee6941dfb1769309f427d49321"
+    },
+    {
+      "name": "io.py",
+      "bytes": 1680,
+      "sha256": "ad05049c5797af014d81041c42d6aba8fe214b066bf74ea5e9f11de480c67d4d"
+    },
+    {
+      "name": "mapper.py",
+      "bytes": 28345,
+      "sha256": "0abf044f7292235cc0d65e0aa2c423924fc9529e64af505980567a67ceff35b5"
+    },
+    {
+      "name": "models.py",
+      "bytes": 7887,
+      "sha256": "641e38c5a3d556e037b4b4cdc0c45dae9d4f2c241dd44e024584129173f02933"
+    },
+    {
+      "name": "opacity.py",
+      "bytes": 5761,
+      "sha256": "7f1f033bc9193150385ac68a0cbcbfd3b14ddbc53dbc1cf0a6ffd28abf0c136f"
+    }
+  ],
+  "style": {
+    "name": "plotstyle.mplstyle",
+    "bytes": 1136,
+    "sha256": "504403310054900a5cd143e1b24b563793a2db355301c67833e69c67a4bcac7a"
+  },
+  "font": {
+    "name": "AVHersheyComplexMedium.ttf",
+    "bytes": 132040,
+    "sha256": "812960bfa93c9f4aebd90a2806a5e512b7c5d828821d2b98a5166346984f1339"
+  },
+  "intensity_unit_assumed": "MJy/sr",
+  "input_caveat": "Prepared cutouts and registration products are identified by hash. Raw archive product identities and preprocessing recipes still require an author-verified data archive.",
+  "CFH": {
+    "science_hdu": 0,
+    "noise_sigma": 0.6,
+    "transmission_threshold": 1.2,
+    "mass_basis": "gas",
+    "kappa_cm2_g": 7.5,
+    "catalog_names": [
+      "G028.37+00.07",
+      "G034.43+00.24",
+      "G035.39-00.33"
+    ],
+    "aperture": "catalog ellipse intersected with input image",
+    "sample_scan": "full input image, default 5x5 scan, duplicate sites merged with multiplicity weights",
+    "bright_policy": "zero",
+    "limit_policy": "finite sensitivity values",
+    "pdf_sample": "common finite, positive, non-bright columns >=0.01 g/cm2 and residual >1.8 MJy/sr in all profiles"
+  },
+  "SgrC": {
+    "science_hdu": "SCI",
+    "uncertainty_hdu": "ERR",
+    "target_rows": [
+      1980,
+      2103
+    ],
+    "target_columns": [
+      77,
+      200
+    ],
+    "distance_kpc": 8.15,
+    "mass_basis": "gas",
+    "gas_to_dust_ratio": 156,
+    "kappa_cm2_g": 9.76,
+    "opacity_status": "adopted benchmark input, not independently convolved",
+    "settings_and_boxes": "data/sgrc_f480m_comparison.json"
+  },
+  "recovery": {
+    "seeds": [
+      18100,
+      18119
+    ],
+    "scenes": 11,
+    "realizations_per_scene": 20,
+    "attempted_fits": 880,
+    "trial_records": "data/recovery/trials.json"
+  }
+}

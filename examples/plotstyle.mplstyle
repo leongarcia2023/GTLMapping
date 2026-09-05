@@ -1,0 +1,49 @@
+font.size : 10
+axes.titlesize : 18
+axes.labelsize : 18
+axes.formatter.limits : -4, 5
+axes.formatter.use_mathtext : True
+axes.formatter.useoffset : False
+axes.prop_cycle : cycler('color', ['1FA89C', 'C65A2E', '6A4C93', '3D6B9E', '8B5BA6', '8F3B1E', 'E0A23C', '7E8B6F', '56648A', 'A8946A'])  # ribbit: teal, terracotta, plum, steel, brightplum, rust, saffron, sage, slate, dark-straw
+figure.titlesize : 24
+figure.subplot.hspace : 0.12
+figure.subplot.wspace : 0.1
+path.simplify : True
+image.cmap : inferno
+
+
+legend.frameon : false
+
+
+hist.bins : 30
+legend.fontsize: 12
+xtick.labelsize : 15
+ytick.labelsize : 15
+errorbar.capsize : 3
+scatter.edgecolors : k
+lines.markersize : 10
+lines.markeredgecolor : k
+lines.linewidth : 3
+figure.figsize: 9,5.56
+savefig.bbox: tight
+savefig.dpi: 150
+
+xtick.top: True
+xtick.bottom: True
+xtick.major.size: 6
+xtick.minor.size: 3.5
+xtick.major.width: 1
+xtick.minor.width: 0.8
+xtick.direction: in
+xtick.minor.visible: True
+
+ytick.left: True
+ytick.right: True
+ytick.major.size: 6
+ytick.minor.size: 3.5
+ytick.major.width: 1
+ytick.minor.width: 0.8
+ytick.direction: in
+ytick.minor.visible: True
+
+hatch.linewidth: 0.5

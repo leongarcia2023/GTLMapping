@@ -1,0 +1,156 @@
+[
+  {
+    "configuration": "original",
+    "profile": "bt12",
+    "samples": 53,
+    "status": "ok",
+    "sum": 6311.151631005986,
+    "unresolved": 15,
+    "strict": 0,
+    "design_rank": null
+  },
+  {
+    "configuration": "original",
+    "profile": "conservative",
+    "samples": 53,
+    "status": "ok",
+    "sum": 6397.87948492172,
+    "unresolved": 20,
+    "strict": 0,
+    "design_rank": 3
+  },
+  {
+    "configuration": "original",
+    "profile": "moderate",
+    "samples": 53,
+    "status": "ok",
+    "sum": 6918.796971617436,
+    "unresolved": 268,
+    "strict": 9,
+    "design_rank": 6
+  },
+  {
+    "configuration": "original",
+    "profile": "liberal",
+    "samples": 53,
+    "status": "ok",
+    "sum": 7296.5331617525135,
+    "unresolved": 833,
+    "strict": 81,
+    "design_rank": 6
+  },
+  {
+    "configuration": "unit_multiplicity",
+    "profile": "bt12",
+    "samples": 53,
+    "status": "ok",
+    "sum": 6311.151631005986,
+    "unresolved": 15,
+    "strict": 0,
+    "design_rank": null
+  },
+  {
+    "configuration": "unit_multiplicity",
+    "profile": "conservative",
+    "samples": 53,
+    "status": "ok",
+    "sum": 6401.09806771884,
+    "unresolved": 20,
+    "strict": 0,
+    "design_rank": 3
+  },
+  {
+    "configuration": "unit_multiplicity",
+    "profile": "moderate",
+    "samples": 53,
+    "status": "ok",
+    "sum": 6913.705716879992,
+    "unresolved": 264,
+    "strict": 9,
+    "design_rank": 6
+  },
+  {
+    "configuration": "unit_multiplicity",
+    "profile": "liberal",
+    "samples": 53,
+    "status": "ok",
+    "sum": 7290.346345721926,
+    "unresolved": 833,
+    "strict": 83,
+    "design_rank": 6
+  },
+  {
+    "configuration": "partner_8_arcsec",
+    "profile": "bt12",
+    "samples": 51,
+    "status": "ok",
+    "sum": 6311.151631005986,
+    "unresolved": 15,
+    "strict": 0,
+    "design_rank": null
+  },
+  {
+    "configuration": "partner_8_arcsec",
+    "profile": "conservative",
+    "samples": 51,
+    "status": "ok",
+    "sum": 6397.789953788104,
+    "unresolved": 20,
+    "strict": 0,
+    "design_rank": 3
+  },
+  {
+    "configuration": "partner_8_arcsec",
+    "profile": "moderate",
+    "samples": 51,
+    "status": "ok",
+    "sum": 6940.408733718562,
+    "unresolved": 283,
+    "strict": 9,
+    "design_rank": 6
+  },
+  {
+    "configuration": "partner_8_arcsec",
+    "profile": "liberal",
+    "samples": 51,
+    "status": "ok",
+    "sum": 7311.5493006850575,
+    "unresolved": 833,
+    "strict": 83,
+    "design_rank": 6
+  },
+  {
+    "configuration": "aperture_scan",
+    "profile": "bt12",
+    "samples": 3,
+    "status": "ok",
+    "sum": 6311.151631005986,
+    "unresolved": 15,
+    "strict": 0,
+    "design_rank": null
+  },
+  {
+    "configuration": "aperture_scan",
+    "profile": "conservative",
+    "samples": 3,
+    "status": "ok",
+    "sum": 6609.085156461924,
+    "unresolved": 63,
+    "strict": 0,
+    "design_rank": 3
+  },
+  {
+    "configuration": "aperture_scan",
+    "profile": "moderate",
+    "samples": 3,
+    "status": "failed",
+    "error": "Foreground trend needs design rank 6; received 3 from 3 unique sites. Select more spatially distributed sites."
+  },
+  {
+    "configuration": "aperture_scan",
+    "profile": "liberal",
+    "samples": 3,
+    "status": "failed",
+    "error": "Foreground trend needs design rank 6; received 3 from 3 unique sites. Select more spatially distributed sites."
+  }
+]

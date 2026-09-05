@@ -120,9 +120,18 @@ class MappingResult:
     header: fits.Header
     wcs: WCS
     kappa_cm2_g: float
+    unresolved_mask: np.ndarray | None = None
+    detection_threshold: np.ndarray | None = None
     foreground_constraint_mask: np.ndarray | None = None
     uncertainty: UncertaintyResult | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def detection_mask(self) -> np.ndarray:
+        """Positive measured pixels, excluding limits, invalid values and emission."""
+        limits = self.saturated_mask if self.unresolved_mask is None else self.unresolved_mask
+        return (~np.ma.getmaskarray(self.surface_density) & ~limits
+                & ~self.bright_mask & (self.surface_density.data > 0))
 
     def write(self, path: str | Path, *, overwrite: bool = False) -> Path:
         """Write a transparent multi-extension FITS product.
@@ -177,6 +186,12 @@ class MappingResult:
                 name="BRIGHT",
             ),
         ]
+        if self.unresolved_mask is not None:
+            hdus.append(fits.ImageHDU(np.asarray(self.unresolved_mask, dtype=np.uint8),
+                header=self._image_header("UNRESOLVED", "bool"), name="UNRESOLVED"))
+        if self.detection_threshold is not None:
+            hdus.append(fits.ImageHDU(np.asarray(self.detection_threshold, dtype=float),
+                header=self._image_header("TRANS_LIM", "MJy sr-1"), name="TRANS_LIM"))
         if self.uncertainty is not None:
             hdus.extend(
                 [

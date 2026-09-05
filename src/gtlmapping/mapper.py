@@ -15,7 +15,7 @@ from .background import (
     estimate_smf_background,
 )
 from .catalog import find_cloud
-from .extinction import compute_extinction, propagate_uncertainty
+from .extinction import compute_extinction, propagate_uncertainty, unresolved_transmission
 from .foreground import (
     detect_saturated_samples,
     estimate_bt12_foreground,
@@ -457,16 +457,28 @@ class GTLMapper:
         filter_name: str | None = None,
         dust_model: str = "oh94_thin_ice_coagulated",
         gas_to_dust_ratio: float = 156.0,
+        mass_basis: str = "gas",
         kappa_std_cm2_g: float = 0.0,
         bright_pixel_policy: str = "allow",
-        saturation_policy: str = "mask",
+        saturation_policy: str | None = None,
         intensity_floor: float | np.ndarray | None = None,
+        detection_threshold: float | np.ndarray | None = None,
+        residual_std: float | np.ndarray | None = None,
+        detection_sigma: float = 2.0,
         observed_std: float | np.ndarray | None = None,
         background_std: float | np.ndarray | None = None,
         foreground_std: float | np.ndarray | None = None,
         use_kriging_variance: bool = True,
     ) -> MappingResult:
-        """Compute a mapping result from the stored foreground/background."""
+        """Compute maps with separate strict and sensitivity-based limit masks.
+
+        The default threshold is twice an explicit residual_std, the observed
+        uncertainty, or the fit's adopted noise (in that order). A supplied
+        floor or threshold overrides that default. This is a sensitivity
+        convention, not a calibrated confidence interval. Use residual_std
+        to include foreground error and its covariance with the image.
+        Without noise information, only strict failures can be identified.
+        """
 
         if self.foreground_result is None:
             raise RuntimeError("No foreground is available.")
@@ -474,22 +486,49 @@ class GTLMapper:
             raise RuntimeError("No background is available.")
         if filter_name is not None and kappa_cm2_g is not None:
             raise ValueError("Specify either filter_name or kappa_cm2_g, not both.")
+        if mass_basis not in {"gas", "total"}:
+            raise ValueError("mass_basis must be 'gas' or 'total'.")
         if filter_name is not None:
             selected_kappa = get_filter_opacity(
                 filter_name,
                 dust_model=dust_model,
                 gas_to_dust_ratio=gas_to_dust_ratio,
+                mass_basis=mass_basis,
             )
         else:
             selected_kappa = 7.5 if kappa_cm2_g is None else float(kappa_cm2_g)
+        if not np.isfinite(detection_sigma) or detection_sigma <= 0:
+            raise ValueError("detection_sigma must be positive and finite.")
+        selected_observed_std = self.observed_std if observed_std is None else observed_std
+        threshold = detection_threshold
+        threshold_basis = "explicit"
+        if threshold is None:
+            if intensity_floor is not None:
+                threshold = intensity_floor
+                threshold_basis = "intensity_floor"
+            elif residual_std is not None:
+                threshold = detection_sigma * np.asarray(residual_std, dtype=float)
+                threshold_basis = "supplied_residual_std"
+            elif selected_observed_std is not None:
+                threshold = detection_sigma * np.asarray(selected_observed_std, dtype=float)
+                threshold_basis = "observed_std_only"
+            elif "noise_sigma" in self.foreground_result.diagnostics:
+                threshold = detection_sigma * self.foreground_result.diagnostics["noise_sigma"]
+                threshold_basis = "adopted_image_noise_only"
+            else:
+                threshold_basis = "strict_only_no_noise"
+        unresolved = unresolved_transmission(self.observed, self.foreground_result.values, threshold)
+        selected_policy = saturation_policy or ("lower_limit" if threshold is not None else "mask")
+        selected_floor = intensity_floor if intensity_floor is not None else threshold
         tau, sigma, saturated, invalid_background, bright = compute_extinction(
             self.observed,
             self.background_result.values,
             self.foreground_result.values,
             kappa_cm2_g=selected_kappa,
             bright_pixel_policy=bright_pixel_policy,
-            saturation_policy=saturation_policy,
-            intensity_floor=intensity_floor,
+            saturation_policy=selected_policy,
+            intensity_floor=selected_floor,
+            detection_threshold=threshold,
         )
         selected_observed_std = (
             self.observed_std if observed_std is None else observed_std
@@ -535,13 +574,17 @@ class GTLMapper:
                 ),
                 kappa_cm2_g=selected_kappa,
                 kappa_std_cm2_g=kappa_std_cm2_g,
-                additional_mask=saturated | invalid_background,
+                additional_mask=unresolved | invalid_background | np.ma.getmaskarray(sigma),
             )
         metadata = {
             "fg_method": self.foreground_result.method,
             "bg_method": self.background_result.method,
             "n_samples": len(self.samples) if self.samples is not None else 0,
-            "saturation_policy": saturation_policy,
+            "saturation_policy": selected_policy,
+            "threshold_basis": threshold_basis,
+            "detection_sigma": detection_sigma,
+            "limit_confidence": "not_calibrated",
+            "mass_basis": mass_basis,
         }
         if filter_name is not None:
             metadata.update(
@@ -557,6 +600,9 @@ class GTLMapper:
             foreground=self.foreground_result.values,
             background=self.background_result.values,
             saturated_mask=saturated,
+            unresolved_mask=unresolved,
+            detection_threshold=(None if threshold is None else
+                                 np.broadcast_to(np.asarray(threshold, float), self.observed.shape).copy()),
             invalid_background_mask=invalid_background,
             bright_mask=bright,
             header=self.header,
@@ -580,8 +626,8 @@ class GTLMapper:
         pixels with ``I_obs <= I_fg``. This convenience method projects that
         foreground below ``I_bg - intensity_floor`` and computes those pixels
         with ``saturation_policy='lower_limit'``. The ``SATURATED`` extension
-        remains the authoritative lower-limit mask; finite values there are
-        not ordinary detections.
+        identifies strict failures; ``UNRESOLVED`` identifies all limits,
+        including weak positive transmission. Finite limits are not detections.
 
         If ``intensity_floor`` is omitted, the liberal fit's documented
         recommendation (normally ``2 * noise_sigma``) is used. A physically
@@ -641,7 +687,7 @@ class GTLMapper:
         This is the moderate counterpart to :meth:`compute_liberal`: it
         projects the foreground below the background by the transmitted-
         intensity floor and keeps censored pixels finite but marked in
-        ``SATURATED``.
+        ``UNRESOLVED``. ``SATURATED`` retains only the strict zero-crossing test.
         """
 
         if self.foreground_result is None:

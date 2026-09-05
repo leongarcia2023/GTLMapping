@@ -5,8 +5,8 @@ type: software
 authors:
   - family-names: "Garcia"
     given-names: "León"
-version: 0.4.0
-date-released: 2026-08-02
+version: 0.5.0
+date-released: 2026-09-05
 abstract: "Mid-infrared extinction mapping with a spatially varying foreground."
 license: "BSD-3-Clause"
 url: "https://github.com/leongarcia2023/GTLMapping"

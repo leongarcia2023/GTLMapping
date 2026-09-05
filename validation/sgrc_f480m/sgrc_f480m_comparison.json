@@ -1,5 +1,5 @@
 {
-  "input": "/Users/leongarcia/Downloads/F480M_registered.fits",
+  "input": "F480M_registered.fits",
   "x_range": [
     77,
     200
@@ -68,11 +68,16 @@
   "conservative_blend_factor": 0.03,
   "conservative_unregularized_local_saturation_pixels": 4889,
   "conservative_unregularized_strict_saturation_pixels": 3984,
-  "bt12_mass_msun": 30.34526570213641,
-  "gtl_detected_only_mass_msun": 31.240713224052712,
-  "gtl_lower_limit_mass_msun": 31.240713224052712,
-  "gtl_to_bt12_detected_mass_ratio": 1.0295086400200233,
-  "gtl_to_bt12_lower_limit_mass_ratio": 1.0295086400200233,
+  "bt12_mass_msun": 30.300094681809437,
+  "mass_basis": "gas",
+  "transmission_threshold_mjy_sr": 0.20464737713336945,
+  "bt12_unresolved_pixels": 55,
+  "gtl_unresolved_pixels": 117,
+  "bt12_detected_only_mass_msun": 29.768167373592256,
+  "gtl_detected_only_mass_msun": 29.973365785902885,
+  "gtl_lower_limit_mass_msun": 31.10124355465865,
+  "gtl_to_bt12_detected_mass_ratio": 1.0068932161572253,
+  "gtl_to_bt12_lower_limit_mass_ratio": 1.0264404742381938,
   "grid_sensitivity": [
     {
       "grid_n": 4,
@@ -80,8 +85,8 @@
       "unique_sample_count": 20,
       "local_saturated_pixels": 123,
       "strict_lower_limit_pixels": 0,
-      "mass_msun": 31.331603603366773,
-      "gtl_to_bt12_mass_ratio": 1.0325038479119635
+      "mass_msun": 31.18255253401187,
+      "gtl_to_bt12_mass_ratio": 1.0291239305180195
     },
     {
       "grid_n": 5,
@@ -89,8 +94,8 @@
       "unique_sample_count": 26,
       "local_saturated_pixels": 131,
       "strict_lower_limit_pixels": 0,
-      "mass_msun": 31.44962330818858,
-      "gtl_to_bt12_mass_ratio": 1.036393077486694
+      "mass_msun": 31.289326961552945,
+      "gtl_to_bt12_mass_ratio": 1.0326478280062072
     },
     {
       "grid_n": 6,
@@ -98,8 +103,8 @@
       "unique_sample_count": 34,
       "local_saturated_pixels": 130,
       "strict_lower_limit_pixels": 0,
-      "mass_msun": 31.374029723148258,
-      "gtl_to_bt12_mass_ratio": 1.0339019612189264
+      "mass_msun": 31.20910459025528,
+      "gtl_to_bt12_mass_ratio": 1.0300002332663192
     },
     {
       "grid_n": 7,
@@ -107,8 +112,8 @@
       "unique_sample_count": 41,
       "local_saturated_pixels": 113,
       "strict_lower_limit_pixels": 0,
-      "mass_msun": 31.1609567175119,
-      "gtl_to_bt12_mass_ratio": 1.026880338547112
+      "mass_msun": 31.03297385831181,
+      "gtl_to_bt12_mass_ratio": 1.0241873559867902
     },
     {
       "grid_n": 8,
@@ -116,8 +121,8 @@
       "unique_sample_count": 49,
       "local_saturated_pixels": 117,
       "strict_lower_limit_pixels": 0,
-      "mass_msun": 31.240713224052712,
-      "gtl_to_bt12_mass_ratio": 1.0295086400200233
+      "mass_msun": 31.10124355465865,
+      "gtl_to_bt12_mass_ratio": 1.0264404742381938
     },
     {
       "grid_n": 9,
@@ -125,8 +130,8 @@
       "unique_sample_count": 40,
       "local_saturated_pixels": 136,
       "strict_lower_limit_pixels": 0,
-      "mass_msun": 31.488971400073932,
-      "gtl_to_bt12_mass_ratio": 1.0376897572479322
+      "mass_msun": 31.30943578702862,
+      "gtl_to_bt12_mass_ratio": 1.0333114835388661
     },
     {
       "grid_n": 10,
@@ -134,56 +139,56 @@
       "unique_sample_count": 22,
       "local_saturated_pixels": 113,
       "strict_lower_limit_pixels": 0,
-      "mass_msun": 31.170468659634995,
-      "gtl_to_bt12_mass_ratio": 1.027193795750501
+      "mass_msun": 31.04143745190611,
+      "gtl_to_bt12_mass_ratio": 1.024466681635214
     }
   ],
   "opacity_systematic_fraction": 0.3,
-  "bt12_opacity_systematic_msun": 9.103579710640922,
-  "gtl_opacity_systematic_msun": 9.372213967215814,
+  "bt12_opacity_systematic_msun": 9.090028404542831,
+  "gtl_opacity_systematic_msun": 9.330373066397595,
   "source_mask_dilation_sensitivity": {
     "0": {
       "masked_pixel_count": 2507,
       "kept_pixel_fraction": 0.8342917575517219,
-      "bt12_mass_msun": 30.34526570213641,
-      "gtl_mass_msun": 31.240713224052712,
-      "gtl_to_bt12_mass_ratio": 1.0295086400200233
+      "bt12_mass_msun": 30.300094681809437,
+      "gtl_mass_msun": 31.10124355465865,
+      "gtl_to_bt12_mass_ratio": 1.0264404742381938
     },
     "3": {
       "masked_pixel_count": 6350,
       "kept_pixel_fraction": 0.5802762905677837,
-      "bt12_mass_msun": 26.63229563341911,
-      "gtl_mass_msun": 27.45635671640114,
-      "gtl_to_bt12_mass_ratio": 1.030942172403192
+      "bt12_mass_msun": 26.587124613092133,
+      "gtl_mass_msun": 27.316887047007086,
+      "gtl_to_bt12_mass_ratio": 1.0274479637995755
     },
     "6": {
       "masked_pixel_count": 9526,
       "kept_pixel_fraction": 0.37034833762971775,
-      "bt12_mass_msun": 20.288871557352973,
-      "gtl_mass_msun": 20.963269935566533,
-      "gtl_to_bt12_mass_ratio": 1.0332398170251686
+      "bt12_mass_msun": 20.243700537025997,
+      "gtl_mass_msun": 20.8247320554029,
+      "gtl_to_bt12_mass_ratio": 1.0287018431889066
     }
   },
   "background_sensitivity": [
     {
       "background_level_mjy_sr": 6.149300049558347,
-      "bt12_mass_msun": 21.335490384294243,
-      "gtl_mass_msun": 22.09828159499293,
-      "gtl_to_bt12_mass_ratio": 1.0357522230311709,
+      "bt12_mass_msun": 21.290319363967267,
+      "gtl_mass_msun": 21.958811925598873,
+      "gtl_to_bt12_mass_ratio": 1.031398897790279,
       "gtl_invalid_background_pixels": 0
     },
     {
       "background_level_mjy_sr": 7.266651058197022,
-      "bt12_mass_msun": 30.34526570213641,
-      "gtl_mass_msun": 31.240713224052712,
-      "gtl_to_bt12_mass_ratio": 1.0295086400200233,
+      "bt12_mass_msun": 30.300094681809437,
+      "gtl_mass_msun": 31.10124355465865,
+      "gtl_to_bt12_mass_ratio": 1.0264404742381938,
       "gtl_invalid_background_pixels": 0
     },
     {
       "background_level_mjy_sr": 8.384002066835697,
-      "bt12_mass_msun": 38.44198032862418,
-      "gtl_mass_msun": 39.43374330358719,
-      "gtl_to_bt12_mass_ratio": 1.0257989564139216,
+      "bt12_mass_msun": 38.396809308297215,
+      "gtl_mass_msun": 39.29427363419313,
+      "gtl_to_bt12_mass_ratio": 1.0233734089384865,
       "gtl_invalid_background_pixels": 0
     }
   ],

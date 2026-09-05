@@ -106,6 +106,7 @@ def run_comparison(
         min_separation_arcsec=0.74,
     )
     bt12_result = bt12.compute(
+        intensity_floor=2.0 * noise_sigma,
         filter_name="F480M",
         gas_to_dust_ratio=156.0,
         kappa_std_cm2_g=0.30 * 9.76,
@@ -133,6 +134,8 @@ def run_comparison(
         min_separation_arcsec=0.74,
     )
     gtl_detected = gtl.compute(
+        saturation_policy="mask",
+        detection_threshold=2.0 * noise_sigma,
         filter_name="F480M",
         gas_to_dust_ratio=156.0,
         kappa_std_cm2_g=0.30 * 9.76,
@@ -280,6 +283,8 @@ def run_comparison(
             bt12_foreground.values,
             kappa_cm2_g=9.76,
             bright_pixel_policy="zero",
+            saturation_policy="lower_limit",
+            intensity_floor=2.0 * noise_sigma,
         )
         _, gtl_sigma, _, invalid_background, _ = compute_extinction(
             observed,
@@ -331,7 +336,7 @@ def run_comparison(
     )
 
     summary: dict[str, object] = {
-        "input": str(input_path),
+        "input": input_path.name,
         "x_range": list(x_range),
         "y_range": list(y_range),
         "distance_kpc": distance_kpc,
@@ -384,9 +389,18 @@ def run_comparison(
             ]
         ),
         "bt12_mass_msun": bt12_mass,
+        "mass_basis": "gas",
+        "transmission_threshold_mjy_sr": 2.0 * noise_sigma,
+        "bt12_unresolved_pixels": int(np.count_nonzero(bt12_result.unresolved_mask)),
+        "gtl_unresolved_pixels": int(np.count_nonzero(gtl_lower_limits.unresolved_mask)),
+        "bt12_detected_only_mass_msun": integrated_mass_msun(
+            np.ma.array(bt12_result.surface_density.data, mask=~bt12_result.detection_mask),
+            pixel_scale=scale, distance_kpc=distance_kpc),
         "gtl_detected_only_mass_msun": gtl_detected_mass,
         "gtl_lower_limit_mass_msun": gtl_lower_limit_mass,
-        "gtl_to_bt12_detected_mass_ratio": gtl_detected_mass / bt12_mass,
+        "gtl_to_bt12_detected_mass_ratio": gtl_detected_mass / integrated_mass_msun(
+            np.ma.array(bt12_result.surface_density.data, mask=~bt12_result.detection_mask),
+            pixel_scale=scale, distance_kpc=distance_kpc),
         "gtl_to_bt12_lower_limit_mass_ratio": (
             gtl_lower_limit_mass / bt12_mass
         ),
@@ -410,75 +424,16 @@ def run_comparison(
     except ImportError:
         return summary
 
-    bt12_sigma = bt12_result.surface_density.filled(np.nan)
-    gtl_sigma = gtl_lower_limits.surface_density.filled(np.nan)
-    common_vmax = float(np.nanpercentile(gtl_sigma, 99.0))
-    figure, axes = plt.subplots(
-        2,
-        3,
-        figsize=(12.0, 7.5),
-        constrained_layout=True,
-    )
-    panels = [
-        (observed, "F480M intensity", "viridis", 2.0, 15.0),
-        (
-            bt12_sigma,
-            f"BT12 Sigma ({bt12_mass:.1f} Msun)",
-            "magma",
-            0.0,
-            common_vmax,
-        ),
-        (
-            gtl_sigma,
-            f"Conservative GTL Sigma ({gtl_lower_limit_mass:.1f} Msun)",
-            "magma",
-            0.0,
-            common_vmax,
-        ),
-        (
-            bt12_local_saturated,
-            f"BT12 within 2 sigma: {bt12_local_saturated.sum()}",
-            "gray_r",
-            0,
-            1,
-        ),
-        (
-            gtl_local_saturated,
-            f"GTL locally consistent: {gtl_local_saturated.sum()}",
-            "gray_r",
-            0,
-            1,
-        ),
-        (
-            gtl_sigma - bt12_sigma,
-            "GTL minus BT12 Sigma",
-            "Reds",
-            0.0,
-            common_vmax / 2.0,
-        ),
-    ]
-    for axis, (values, title, cmap, vmin, vmax) in zip(
-        axes.flat,
-        panels,
-        strict=True,
-    ):
-        image = axis.imshow(
-            values,
-            origin="lower",
-            cmap=cmap,
-            vmin=vmin,
-            vmax=vmax,
-        )
-        axis.set_title(title)
-        axis.set_xlabel("Image column in target box")
-        axis.set_ylabel("Image row in target box")
-        figure.colorbar(image, ax=axis, fraction=0.046)
-    figure.suptitle(
-        "Sgr C F480M: BT12 and conservative spatial foreground",
-        fontsize=14,
-    )
-    figure.savefig(output_dir / "sgrc_f480m_comparison.png", dpi=200)
-    plt.close(figure)
+    from generate_figures import plot_sgrc
+    from shutil import copyfile
+    plot_sgrc(input_path=input_path,
+              bt12_path=output_dir / "sgrc_f480m_bt12.fits",
+              gtl_path=output_dir / "sgrc_f480m_gtl_lower_limits.fits",
+              summary_path=output_dir / "sgrc_f480m_comparison.json",
+              data_dir=output_dir, figure_dir=output_dir,
+              style_path=Path(__file__).with_name("plotstyle.mplstyle"))
+    copyfile(output_dir / "fig_sgrc_benchmark.png",
+             output_dir / "sgrc_f480m_comparison.png")
     return summary
 
 
